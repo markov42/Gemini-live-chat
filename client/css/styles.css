@@ -1,0 +1,1182 @@
+/* Base transparency and acrylic effect setup */
+html, body {
+    background-color: transparent !important;
+    -webkit-app-region: drag;
+    height: 100%;
+    overflow: hidden;
+}
+
+:root {
+    --bg-color: rgba(0, 0, 0, 0);
+    --button-bg: rgba(45, 45, 45, 0.7);
+    --button-hover: rgba(61, 61, 61, 0.8);
+    --text-color: #ffffff;
+    --accent-color: #4CAF50;
+    --danger-color: #ff4444;
+    --semi-transparent-bg: rgba(0, 0, 0, 0.5);
+    --acrylic-bg: rgba(20, 20, 20, 0.5);
+    --sidebar-width: 10%;
+    --purple-gradient-start: rgba(103, 58, 183, 0.7);
+    --blue-gradient-end: rgba(33, 150, 243, 0.7);
+    --app-height: 100vh;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+body {
+    color: var(--text-color);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    height: var(--app-height);
+    display: flex;
+    flex-direction: column;
+    /* Apply gradient background effect */
+    background: linear-gradient(135deg, var(--purple-gradient-start), var(--blue-gradient-end));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    overflow: hidden;
+}
+
+/* Adjust for macOS title bar */
+body.darwin {
+    padding-top: 28px; /* Space for macOS hidden title bar */
+    height: calc(var(--app-height) - 28px);
+}
+
+.app-container {
+    position: relative;
+    width: 100%;
+    height: var(--app-height);
+    display: grid;
+    grid-template-columns: var(--sidebar-width) 1fr;
+    grid-template-rows: 1fr;
+    overflow: hidden;
+    background-color: transparent;
+}
+
+/* Sidebar with improved translucency and border */
+.sidebar {
+    grid-column: 1;
+    grid-row: 1;
+    height: var(--app-height);
+    background-color: rgba(30, 30, 60, 0.4);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    padding: 15px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 5;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.chat-area {
+    grid-column: 2;
+    grid-row: 1;
+    height: var(--app-height);
+    position: relative;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    overflow: hidden;
+}
+
+/* Controls for sidebar */
+.sidebar-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+}
+
+/* Bottom section for settings */
+.sidebar-bottom {
+    margin-top: auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding-bottom: 10px;
+}
+
+/* Adjust buttons for icon-only layout */
+.disconnect-btn, 
+.connect-btn,
+.settings-btn,
+.camera-btn,
+.screen-btn,
+.mic-btn {
+    width: 45px;
+    height: 45px;
+    padding: 0;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    position: relative;
+}
+
+/* Remove text for icon-only layout */
+.disconnect-btn span,
+.connect-btn span {
+    display: none;
+}
+
+/* Replace text with icons */
+.disconnect-btn::before {
+    content: "⏻";
+    font-size: 18px;
+}
+
+.connect-btn::before {
+    content: "⏻";
+    font-size: 18px;
+}
+
+/* Buttons with improved styling */
+.disconnect-btn,
+.connect-btn,
+.mic-btn,
+.camera-btn,
+.screen-btn,
+.send-btn,
+.settings-btn {
+    background-color: rgba(45, 45, 75, 0.6);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.disconnect-btn {
+    color: var(--danger-color);
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    border: 2px solid var(--danger-color);
+}
+
+.connect-btn {
+    color: var(--accent-color);
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    border: 2px solid var(--accent-color);
+}
+
+.mic-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 2px solid var(--accent-color);
+    color: var(--text-color);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.camera-btn,
+.screen-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 2px solid var(--accent-color);
+    color: var(--text-color);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+/* Media query adjustments for small screens */
+@media (max-width: 768px) {
+    :root {
+        --app-height: 100vh;
+    }
+    
+    .app-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: 65px 1fr;
+        height: var(--app-height);
+    }
+
+    .sidebar {
+        grid-column: 1;
+        grid-row: 1;
+        height: 65px;
+        flex-direction: row;
+        padding: 10px;
+    }
+
+    .sidebar-controls {
+        flex-direction: row;
+        justify-content: center;
+        gap: 15px;
+    }
+    
+    .sidebar-bottom {
+        margin-top: 0;
+        margin-left: 15px;
+    }
+
+    .chat-area {
+        grid-column: 1;
+        grid-row: 2;
+        height: calc(var(--app-height) - 65px);
+    }
+    
+    .chat-history {
+        max-height: calc(var(--app-height) - 65px - 80px);
+    }
+    
+    .visualizer {
+        width: 100%;
+        bottom: 70px; /* Adjust based on input height */
+    }
+    
+    .text-input-container {
+        left: 15px;
+        bottom: 15px;
+    }
+}
+
+/* Chat history with improved translucency */
+.chat-history {
+    grid-row: 1;
+    position: relative;
+    margin: 10px 15px 80px 15px; /* Increased bottom margin for input */
+    border-radius: 10px;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    background-color: rgba(30, 30, 60, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-height: calc(var(--app-height) - 130px); /* Adjusted to account for input and margins */
+}
+
+/* Text input with improved translucency */
+.text-input-container {
+    grid-row: 2;
+    position: fixed;
+    bottom: 20px;
+    left: calc(var(--sidebar-width) + 15px);
+    right: 15px;
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin: 0;
+    background-color: transparent;
+    height: 50px; /* Fixed height for input container */
+}
+
+/* Custom window controls for non-macOS */
+.window-controls {
+    position: fixed;
+    top: 0;
+    right: 0;
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    z-index: 9999;
+    -webkit-app-region: no-drag;
+}
+
+.window-control-btn {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: none;
+    outline: none;
+    cursor: pointer;
+}
+
+.minimize-btn {
+    background-color: #FFBD44;
+}
+
+.maximize-btn {
+    background-color: #00CA4E;
+}
+
+.close-btn {
+    background-color: #FF605C;
+}
+
+/* Ensure all buttons are not draggable */
+button,
+input,
+.text-input,
+.camera-preview,
+.screen-preview,
+.chat-history {
+    -webkit-app-region: no-drag;
+}
+
+/* Ensure transparent backgrounds for all containers */
+.settings-dialog,
+.chat-history,
+.camera-preview,
+.screen-preview {
+    background-color: var(--acrylic-bg);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+.camera-btn:hover,
+.screen-btn:hover {
+    background-color: var(--button-hover);
+    transform: scale(1.05);
+}
+
+.camera-btn.active,
+.screen-btn.active {
+    background-color: var(--accent-color);
+}
+
+/* Media query for small devices */
+@media screen and (max-width: 350px) {
+    .sidebar {
+        padding: 10px 5px;
+    }
+    
+    .sidebar-controls {
+        gap: 15px;
+    }
+}
+
+.mic-btn:hover {
+    background-color: var(--button-hover);
+    transform: scale(1.05);
+}
+
+.mic-btn.active {
+    background-color: var(--accent-color);
+}
+
+.mic-icon {
+    font-size: 16px;
+}
+
+.text-input {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(30, 30, 60, 0.6);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    -webkit-app-region: no-drag;
+    color: var(--text-color);
+    font-size: 16px;
+    outline: none;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.text-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.send-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(30, 30, 60, 0.6);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    color: var(--accent-color);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.send-btn:hover {
+    background-color: var(--button-hover);
+    color: var(--text-color);
+}
+
+/* Visualizer adjusted for grid layout */
+.visualizer {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: calc(100% - var(--sidebar-width));
+    height: 70px;
+    z-index: 1;
+    pointer-events: none; /* Allow clicks to pass through */
+}
+
+/* Camera preview with grid-aware positioning */
+.camera-preview {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 240px;
+    height: 180px;
+    max-height: calc(var(--app-height) - 200px);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 100;
+    display: none; /* Hidden by default */
+    cursor: move;
+    user-select: none;
+    background-color: rgba(30, 30, 60, 0.4);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Screen preview with grid-aware positioning */
+.screen-preview {
+    position: fixed;
+    bottom: 300px;
+    right: 20px;
+    width: 240px;
+    height: 135px;
+    max-height: calc((var(--app-height) - 350px) / 2);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 100;
+    display: none; /* Hidden by default */
+    cursor: move;
+    user-select: none;
+    background-color: rgba(30, 30, 60, 0.4);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Preview headers with improved translucency */
+.camera-preview-header, .screen-preview-header {
+    background-color: rgba(30, 30, 60, 0.5);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.camera-preview-title {
+    font-size: 12px;
+    color: var(--text-color);
+}
+
+.camera-preview-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.camera-preview-btn {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: none;
+    color: var(--text-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    padding: 0;
+}
+
+.camera-preview-btn:hover {
+    color: var(--accent-color);
+}
+
+.camera-preview video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    margin-top: 30px; /* Space for header */
+}
+
+.camera-preview.minimized {
+    height: 40px;
+    overflow: hidden;
+}
+
+.screen-preview-title {
+    font-size: 12px;
+    color: var(--text-color);
+}
+
+.screen-preview-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.screen-preview-btn {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: none;
+    color: var(--text-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    padding: 0;
+}
+
+.screen-preview-btn:hover {
+    color: var(--accent-color);
+}
+
+.screen-preview video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Maintain aspect ratio without cropping */
+    margin-top: 30px; /* Space for header */
+}
+
+.screen-preview.minimized {
+    height: 40px;
+    overflow: hidden;
+}
+
+/* Media query for devices with width less than 340px */
+@media (max-width: 340px) {
+    .camera-preview {
+        width: 180px;
+        height: 135px; /* Maintain 4:3 aspect ratio */
+        right: 15px;
+        bottom: 90px;
+    }
+    
+    .screen-preview {
+        width: 180px;
+        height: 101px; /* Maintain 16:9 aspect ratio */
+        right: 15px;
+        bottom: 250px;
+    }
+}
+
+.camera-switch-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    z-index: 1000;
+    transition: background-color 0.2s;
+}
+
+.camera-switch-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+/* Hide on desktop */
+@media (hover: hover) and (pointer: fine) {
+    .camera-switch-btn {
+        display: none;
+    }
+}
+
+.settings-btn {
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 20px;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.settings-btn:hover {
+    background-color: var(--button-hover);
+}
+
+/* Settings dialog with improved translucency */
+.settings-dialog {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    width: 90%;
+    max-width: 500px;
+    max-height: calc(var(--app-height) - 60px);
+    overflow-y: auto;
+    z-index: 1001;
+    background-color: rgba(30, 30, 60, 0.5);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.settings-dialog.active {
+    display: block;
+}
+
+.settings-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--semi-transparent-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 1000;
+}
+
+.settings-overlay.active {
+    display: block;
+}
+
+.settings-group {
+    margin-bottom: 20px;
+}
+
+.settings-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-color);
+}
+
+.settings-group select,
+.settings-group input {
+    width: 100%;
+    padding: 8px;
+    background-color: rgba(30, 30, 60, 0.6);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    -webkit-app-region: no-drag;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: var(--text-color);
+}
+
+.collapsible {
+    background-color: rgba(30, 30, 60, 0.6);
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    -webkit-app-region: no-drag;
+}
+
+.collapsible-content {
+    display: none;
+    padding: 10px;
+}
+
+.collapsible-content.active {
+    display: block;
+}
+
+.settings-save-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--accent-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+}
+
+.settings-save-btn:hover {
+    opacity: 0.9;
+}
+
+/* Updated chat message styling */
+.chat-message {
+    padding: 10px 15px;
+    border-radius: 15px;
+    max-width: 80%;
+    word-wrap: break-word;
+    line-height: 1.4;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-message {
+    background-color: rgba(0, 120, 255, 0.4);
+    color: white;
+    align-self: flex-end;
+    margin-left: 20%;
+}
+
+.model-message {
+    background-color: rgba(40, 40, 70, 0.5);
+    color: white;
+    align-self: flex-start;
+    margin-right: 20%;
+}
+
+.model-message.streaming::after {
+    content: '▋';
+    display: inline-block;
+    animation: blink 1s step-end infinite;
+    margin-left: 2px;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Code Block Styling */
+.code-block {
+    background-color: var(--semi-transparent-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-app-region: no-drag;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 10px 0;
+    overflow-x: auto;
+    font-family: 'Courier New', Courier, monospace;
+    line-height: 1.4;
+    white-space: pre;
+}
+
+.code-block code {
+    font-size: 0.9em;
+    color: #333;
+}
+
+/* Different language syntax colors */
+.language-js, .language-javascript {
+    color: #8a6d3b;
+}
+
+.language-py, .language-python {
+    color: #0f5b99;
+}
+
+.language-html {
+    color: #bd4147;
+}
+
+.language-css {
+    color: #4b8b3b;
+}
+
+.language-json {
+    color: #b58a4a;
+}
+
+/* Ensure code doesn't overflow */
+.model-message pre {
+    max-width: 100%;
+    word-break: break-word;
+}
+
+.refresh-btn {
+    padding: 5px 10px;
+    background-color: var(--accent-color);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-app-region: no-drag;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.refresh-btn:hover {
+    background-color: #45a049;
+}
+
+#audioInput, #videoInput {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: var(--button-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-app-region: no-drag;
+    color: var(--text-color);
+}
+
+/* Source selection dialog with improved translucency */
+.source-selection-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.source-selection-dialog {
+    background-color: rgba(30, 30, 60, 0.4);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    width: 80%;
+    max-width: 600px;
+    max-height: calc(var(--app-height) - 60px);
+    overflow-y: auto;
+    color: var(--text-color);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.source-selection-dialog h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 18px;
+}
+
+.source-selection-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    max-height: calc(var(--app-height) - 200px);
+    overflow-y: auto;
+    padding: 10px;
+}
+
+/* Source item with improved glassmorphic design */
+.source-item {
+    background-color: rgba(40, 40, 70, 0.4);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.source-item:hover {
+    background-color: rgba(50, 50, 80, 0.5);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.source-item.selected {
+    border-color: var(--accent-color);
+    background-color: rgba(76, 175, 80, 0.2);
+}
+
+.source-name {
+    font-size: 16px;
+    width: 100%;
+    padding: 5px;
+}
+
+.source-selection-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.source-selection-buttons button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.cancel-btn {
+    background-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+}
+
+.cancel-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.select-btn {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.select-btn:hover:not(:disabled) {
+    background-color: rgba(76, 175, 80, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.select-btn:disabled {
+    background-color: rgba(76, 175, 80, 0.4);
+    cursor: not-allowed;
+}
+
+/* Add a button to the screen preview header to select source */
+.source-select-btn {
+    margin-right: 5px;
+}
+
+/* Context menu for screen button with grid-aware positioning */
+.context-menu {
+    position: fixed;
+    background-color: rgba(30, 30, 60, 0.4);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 5px 0;
+    min-width: 180px;
+    z-index: 1010;
+    display: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.context-menu-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-color);
+    font-size: 14px;
+}
+
+.context-menu-item:hover {
+    background-color: rgba(45, 45, 75, 0.6);
+}
+
+/* Checkbox container styles */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.checkbox-container input[type="checkbox"] {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-color);
+}
+
+.checkbox-container label {
+    display: inline;
+    margin-bottom: 0;
+}
+
+.help-text {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 5px;
+    margin-left: 28px;
+}
+
+/* Chrome, Edge, Safari scrollbar styling */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-track {
+    background-color: transparent;
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    transition: background-color 0.3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Auto-hide scrollbar when not in use */
+.chat-history,
+.source-selection-container,
+.settings-dialog {
+    scrollbar-width: thin;
+    transition: scrollbar-color 0.3s ease;
+}
+
+.chat-history:not(:hover):not(:focus-within),
+.source-selection-container:not(:hover):not(:focus-within),
+.settings-dialog:not(:hover):not(:focus-within) {
+    scrollbar-color: transparent transparent;
+}
+
+.chat-history:not(:hover):not(:focus-within)::-webkit-scrollbar-thumb,
+.source-selection-container:not(:hover):not(:focus-within)::-webkit-scrollbar-thumb,
+.settings-dialog:not(:hover):not(:focus-within)::-webkit-scrollbar-thumb {
+    background-color: transparent;
+}
+
+/* Add visible scrollbars on hover/focus */
+.chat-history:hover,
+.chat-history:focus-within,
+.source-selection-container:hover,
+.source-selection-container:focus-within,
+.settings-dialog:hover,
+.settings-dialog:focus-within {
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+/* Hover and active states for sidebar buttons */
+.disconnect-btn:hover,
+.connect-btn:hover,
+.settings-btn:hover,
+.camera-btn:hover,
+.screen-btn:hover,
+.mic-btn:hover {
+    background-color: var(--button-hover);
+    transform: scale(1.05);
+}
+
+.camera-btn.active,
+.screen-btn.active,
+.mic-btn.active {
+    background-color: var(--accent-color);
+}
+
+/* Camera preview header with position properties */
+.camera-preview-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background-color: rgba(30, 30, 60, 0.5);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    -webkit-app-region: drag;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+    z-index: 3;
+}
+
+/* Screen preview header with position properties */
+.screen-preview-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background-color: rgba(30, 30, 60, 0.5);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    -webkit-app-region: drag;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+    z-index: 3;
+}
+
+.camera-preview.minimized video,
+.screen-preview.minimized video {
+    display: none;
+}
+
+/* Media query for small height screens */
+@media (max-height: 600px) {
+    .sidebar-controls {
+        gap: 10px;
+    }
+    
+    .chat-history {
+        max-height: calc(var(--app-height) - 110px);
+        margin-bottom: 60px;
+    }
+    
+    .text-input-container {
+        height: 40px;
+        bottom: 10px;
+    }
+    
+    .camera-preview {
+        width: 180px;
+        height: 135px;
+        max-height: calc(var(--app-height) - 160px);
+    }
+    
+    .screen-preview {
+        width: 180px;
+        height: 101px;
+        max-height: calc((var(--app-height) - 300px) / 2);
+    }
+}
+
+/* Media query for very small screens */
+@media (max-height: 450px) {
+    .sidebar-controls {
+        gap: 5px;
+    }
+    
+    .disconnect-btn, 
+    .connect-btn,
+    .settings-btn,
+    .camera-btn,
+    .screen-btn,
+    .mic-btn {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .camera-preview, .screen-preview {
+        max-width: 160px;
+        max-height: calc(var(--app-height) - 120px);
+    }
+}
