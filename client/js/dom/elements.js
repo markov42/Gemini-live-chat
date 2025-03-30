@@ -14,10 +14,7 @@ const elements = {
 
     // Text input elements
     messageInput: document.getElementById('messageInput'),
-    sendBtn: document.getElementById('sendBtn'),
-
-    // Visualizer canvas
-    visualizerCanvas: document.getElementById('visualizer')
+    sendBtn: document.getElementById('sendBtn')
 };
 
 export default elements;

@@ -33,16 +33,24 @@ export class ChatManager {
         text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
         
         // Handle unordered lists (*, -, +)
-        text = text.replace(/^\s*[\*\-\+]\s+(.*)/gm, '<li>$1</li>');
-        text = text.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+        let hasUnorderedList = text.match(/^\s*[\*\-\+]\s+/gm);
+        if (hasUnorderedList) {
+            text = text.replace(/^\s*[\*\-\+]\s+(.*)/gm, '<li>$1</li>');
+            text = text.replace(/(?:(?!<\/li>).)*(<li>.*<\/li>)(?:(?!<li>).)*/, '<ul>$1</ul>');
+        }
         
-        // Handle ordered lists (1., 2., etc)
-        text = text.replace(/^\s*(\d+)\.\s+(.*)/gm, '<li>$2</li>');
-        text = text.replace(/(<li>.*<\/li>)/s, '<ol>$1</ol>');
+        // Handle ordered lists (1., 2., etc) - only convert if it's actually a list
+        let hasOrderedList = text.match(/^\s*\d+\.\s+/gm);
+        if (hasOrderedList) {
+            text = text.replace(/^\s*\d+\.\s+(.*)/gm, '<li>$1</li>');
+            text = text.replace(/(?:(?!<\/li>).)*(<li>.*<\/li>)(?:(?!<li>).)*/, '<ol>$1</ol>');
+        }
         
-        // Handle paragraphs
-        text = text.replace(/\n\s*\n/g, '</p><p>');
-        text = '<p>' + text + '</p>';
+        // Handle paragraphs - only if not already in a list or code block
+        if (!hasOrderedList && !hasUnorderedList) {
+            text = text.replace(/\n\s*\n/g, '</p><p>');
+            text = '<p>' + text + '</p>';
+        }
         
         // Clean up empty paragraphs
         text = text.replace(/<p><\/p>/g, '');

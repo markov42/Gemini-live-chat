@@ -7,7 +7,6 @@ import { GeminiWebsocketClient } from '../ws/client.js';
 
 import { AudioRecorder } from '../audio/recorder.js';
 import { AudioStreamer } from '../audio/streamer.js';
-import { AudioVisualizer } from '../audio/visualizer.js';
 
 import { DeepgramTranscriber } from '../transcribe/deepgram.js';
 
@@ -281,12 +280,6 @@ export class GeminiAgent{
                 this.audioRecorder = null;
             }
 
-            // Cleanup audio visualizer before audio context
-            if (this.visualizer) {
-                this.visualizer.cleanup();
-                this.visualizer = null;
-            }
-
             // Clean up audio streamer before closing context
             if (this.audioStreamer) {
                 this.audioStreamer.stop();
@@ -378,9 +371,6 @@ export class GeminiAgent{
             this.audioContext = new AudioContext();
             this.audioStreamer = new AudioStreamer(this.audioContext);
             this.audioStreamer.initialize();
-            this.visualizer = new AudioVisualizer(this.audioContext, 'visualizer');
-            this.audioStreamer.gainNode.connect(this.visualizer.analyser);
-            this.visualizer.start();
             this.audioRecorder = new AudioRecorder();
             
             // Initialize transcriber objects if API key is provided, but don't connect yet

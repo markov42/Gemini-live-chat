@@ -11,14 +11,24 @@ html, body {
     --button-bg: rgba(45, 45, 45, 0.7);
     --button-hover: rgba(61, 61, 61, 0.8);
     --text-color: #ffffff;
-    --accent-color: #4CAF50;
+    --accent-color: hsl(197, 86%, 56%);
     --danger-color: #ff4444;
     --semi-transparent-bg: rgba(0, 0, 0, 0.5);
     --acrylic-bg: rgba(20, 20, 20, 0.5);
-    --sidebar-width: 10%;
+    --sidebar-width: 7%;
     --purple-gradient-start: rgba(103, 58, 183, 0.7);
     --blue-gradient-end: rgba(33, 150, 243, 0.7);
     --app-height: 100vh;
+    --accent-color-rgb: 76, 175, 80;
+    
+    /* Typography system */
+    --font-primary: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, Monaco, 'Liberation Mono', monospace;
+    --font-size-base: 15px;
+    --font-size-sm: 13px;
+    --font-size-code: 14px;
+    --line-height-base: 1.5;
+    --line-height-code: 1.4;
 }
 
 * {
@@ -33,7 +43,9 @@ html, body {
 
 body {
     color: var(--text-color);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: var(--font-primary);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
     height: var(--app-height);
     display: flex;
     flex-direction: column;
@@ -110,7 +122,7 @@ body.darwin {
     margin-bottom: 0; /* Increased bottom margin */
 }
 
-/* Adjust buttons for icon-only layout */
+/* Adjust buttons for icon-only layout with modern glassmorphic design */
 .disconnect-btn, 
 .connect-btn,
 .settings-btn,
@@ -126,6 +138,59 @@ body.darwin {
     align-items: center;
     margin: 0;
     position: relative;
+    background: rgba(45, 45, 75, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced hover effects for all sidebar buttons */
+.disconnect-btn:hover,
+.connect-btn:hover,
+.settings-btn:hover,
+.camera-btn:hover,
+.screen-btn:hover,
+.mic-btn:hover {
+    background: rgba(60, 60, 90, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Active state with glowing effect */
+.camera-btn.active,
+.screen-btn.active,
+.mic-btn.active {
+    background: rgba(var(--accent-color-rgb, 76, 175, 80), 0.3);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 15px rgba(var(--accent-color-rgb, 76, 175, 80), 0.3);
+}
+
+/* Special styling for disconnect button */
+.disconnect-btn {
+    background: rgba(255, 68, 68, 0.2);
+    border-color: rgba(255, 68, 68, 0.3);
+}
+
+.disconnect-btn:hover {
+    background: rgba(255, 68, 68, 0.3);
+    border-color: rgba(255, 68, 68, 0.4);
+    box-shadow: 0 6px 12px rgba(255, 68, 68, 0.2);
+}
+
+/* Special styling for connect button */
+.connect-btn {
+    background: rgba(76, 175, 80, 0.2);
+    border-color: rgba(76, 175, 80, 0.3);
+}
+
+.connect-btn:hover {
+    background: rgba(76, 175, 80, 0.3);
+    border-color: rgba(76, 175, 80, 0.4);
+    box-shadow: 0 6px 12px rgba(76, 175, 80, 0.2);
 }
 
 /* Remove text for icon-only layout */
@@ -250,11 +315,6 @@ body.darwin {
         max-height: calc(var(--app-height) - 65px - 60px);
     }
     
-    .visualizer {
-        width: 100%;
-        bottom: 70px; /* Adjust based on input height */
-    }
-    
     .text-input-container {
         height: 45px;
         left: 15px;
@@ -266,7 +326,7 @@ body.darwin {
 .chat-history {
     grid-row: 1;
     position: relative;
-    margin: 10px 15px 65px 15px; /* Increased bottom margin to 90px for better separation */
+    margin: 10px 15px 65px 15px;
     border-radius: 10px;
     padding: 15px;
     overflow-y: auto;
@@ -279,14 +339,14 @@ body.darwin {
     background-color: rgba(30, 30, 60, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    max-height: calc(var(--app-height) - 140px); /* Adjusted to account for increased bottom margin */
+    max-height: calc(var(--app-height) - 140px);
 }
 
 /* Text input with improved translucency */
 .text-input-container {
     grid-row: 2;
     position: fixed;
-    bottom: 15px; /* Increased bottom spacing */
+    bottom: 15px;
     left: calc(var(--sidebar-width) + 15px);
     right: 15px;
     display: flex;
@@ -297,8 +357,8 @@ body.darwin {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     margin: 0;
     background-color: transparent;
-    height: 50px; /* Fixed height for input container */
-    padding: 0; /* Added horizontal padding */
+    height: 50px;
+    padding: 0;
 }
 
 /* Custom window controls for non-macOS */
@@ -430,17 +490,6 @@ input,
 .send-btn:hover {
     background-color: var(--button-hover);
     color: var(--text-color);
-}
-
-/* Visualizer adjusted for grid layout */
-.visualizer {
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    width: calc(100% - var(--sidebar-width));
-    height: 70px;
-    z-index: 1;
-    pointer-events: none; /* Allow clicks to pass through */
 }
 
 /* Camera preview with grid-aware positioning */
@@ -735,15 +784,38 @@ input,
 
 /* Updated chat message styling */
 .chat-message {
-    padding: 10px 15px;
+    padding: 15px;
     border-radius: 15px;
     max-width: 80%;
     word-wrap: break-word;
-    line-height: 1.4;
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* List styling in chat messages */
+.chat-message ul,
+.chat-message ol {
+    margin: 0.8em 0;
+    padding-left: 1.5em;
+    line-height: var(--line-height-base);
+}
+
+.chat-message li {
+    margin: 0.4em 0;
+}
+
+.chat-message ol {
+    list-style-type: decimal;
+    list-style-position: outside;
+}
+
+.chat-message ul {
+    list-style-type: disc;
+    list-style-position: outside;
 }
 
 .user-message {
@@ -777,46 +849,63 @@ input,
     background-color: var(--semi-transparent-bg);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    -webkit-app-region: no-drag;
     border-radius: 6px;
-    padding: 12px;
-    margin: 10px 0;
+    padding: 12px 15px;
+    margin: 0.8em 0;
     overflow-x: auto;
-    font-family: 'Courier New', Courier, monospace;
-    line-height: 1.4;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-code);
+    line-height: var(--line-height-code);
     white-space: pre;
 }
 
 .code-block code {
-    font-size: 0.9em;
-    color: #333;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
 }
 
-/* Different language syntax colors */
+/* Inline code styling */
+.chat-message code:not(.code-block code) {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Different language syntax colors with adjusted opacity for better contrast */
 .language-js, .language-javascript {
-    color: #8a6d3b;
+    color: rgba(255, 225, 125, 0.95);
 }
 
 .language-py, .language-python {
-    color: #0f5b99;
+    color: rgba(130, 200, 255, 0.95);
 }
 
 .language-html {
-    color: #bd4147;
+    color: rgba(255, 160, 160, 0.95);
 }
 
 .language-css {
-    color: #4b8b3b;
+    color: rgba(150, 255, 150, 0.95);
 }
 
 .language-json {
-    color: #b58a4a;
+    color: rgba(255, 200, 140, 0.95);
 }
+
+/* Headers within chat messages */
+.chat-message h1 { font-size: 1.5em; margin: 1em 0 0.5em; }
+.chat-message h2 { font-size: 1.3em; margin: 1em 0 0.5em; }
+.chat-message h3 { font-size: 1.2em; margin: 1em 0 0.5em; }
+.chat-message h4 { font-size: 1.1em; margin: 1em 0 0.5em; }
+.chat-message h5 { font-size: 1em; margin: 1em 0 0.5em; }
 
 /* Ensure code doesn't overflow */
 .model-message pre {
     max-width: 100%;
-    word-break: break-word;
+    margin: 0;
 }
 
 .refresh-btn {
@@ -1201,6 +1290,7 @@ input,
     .mic-btn {
         width: 35px;
         height: 35px;
+        font-size: 14px;
     }
     
     .camera-preview, .screen-preview {
