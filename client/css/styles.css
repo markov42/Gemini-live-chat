@@ -69,7 +69,7 @@ body.darwin {
     background-color: rgba(30, 30, 60, 0.4);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
-    padding: 15px 10px;
+    padding: 25px 10px 30px; /* Increased bottom padding to 30px */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -97,6 +97,7 @@ body.darwin {
     align-items: center;
     gap: 20px;
     width: 100%;
+    margin-top: 5px; /* Add margin at top */
 }
 
 /* Bottom section for settings */
@@ -105,7 +106,8 @@ body.darwin {
     width: 100%;
     display: flex;
     justify-content: center;
-    padding-bottom: 10px;
+    padding-bottom: 30px; /* Increased bottom padding */
+    margin-bottom: 0; /* Increased bottom margin */
 }
 
 /* Adjust buttons for icon-only layout */
@@ -220,18 +222,21 @@ body.darwin {
         grid-row: 1;
         height: 65px;
         flex-direction: row;
-        padding: 10px;
+        padding: 10px 15px 20px;
     }
 
     .sidebar-controls {
         flex-direction: row;
         justify-content: center;
         gap: 15px;
+        margin-top: 0; /* Reset margin for mobile */
     }
     
     .sidebar-bottom {
         margin-top: 0;
         margin-left: 15px;
+        padding-bottom: 0; /* Reset padding for mobile */
+        margin-bottom: 0; /* Reset margin for mobile */
     }
 
     .chat-area {
@@ -241,7 +246,8 @@ body.darwin {
     }
     
     .chat-history {
-        max-height: calc(var(--app-height) - 65px - 80px);
+        margin-bottom: 60px;
+        max-height: calc(var(--app-height) - 65px - 60px);
     }
     
     .visualizer {
@@ -250,8 +256,9 @@ body.darwin {
     }
     
     .text-input-container {
+        height: 45px;
         left: 15px;
-        bottom: 15px;
+        bottom: 10px;
     }
 }
 
@@ -259,7 +266,7 @@ body.darwin {
 .chat-history {
     grid-row: 1;
     position: relative;
-    margin: 10px 15px 80px 15px; /* Increased bottom margin for input */
+    margin: 10px 15px 65px 15px; /* Increased bottom margin to 90px for better separation */
     border-radius: 10px;
     padding: 15px;
     overflow-y: auto;
@@ -272,24 +279,26 @@ body.darwin {
     background-color: rgba(30, 30, 60, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    max-height: calc(var(--app-height) - 130px); /* Adjusted to account for input and margins */
+    max-height: calc(var(--app-height) - 140px); /* Adjusted to account for increased bottom margin */
 }
 
 /* Text input with improved translucency */
 .text-input-container {
     grid-row: 2;
     position: fixed;
-    bottom: 20px;
+    bottom: 15px; /* Increased bottom spacing */
     left: calc(var(--sidebar-width) + 15px);
     right: 15px;
     display: flex;
     gap: 10px;
+    align-items: center;
     z-index: 10;
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     margin: 0;
     background-color: transparent;
     height: 50px; /* Fixed height for input container */
+    padding: 0; /* Added horizontal padding */
 }
 
 /* Custom window controls for non-macOS */
@@ -359,11 +368,11 @@ input,
 /* Media query for small devices */
 @media screen and (max-width: 350px) {
     .sidebar {
-        padding: 10px 5px;
+        padding: 10px 8px; /* Adjusted padding for very small screens */
     }
     
     .sidebar-controls {
-        gap: 15px;
+        gap: 12px; /* Reduced gap for very small screens */
     }
 }
 
@@ -383,6 +392,7 @@ input,
 .text-input {
     flex: 1;
     padding: 12px;
+    height: 50px; 
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     background-color: rgba(30, 30, 60, 0.6);
@@ -397,12 +407,12 @@ input,
 
 .text-input:focus {
     border-color: var(--accent-color);
-    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    box-shadow: 0 0 0 2px rgba(7, 100, 231, 0.2);
 }
 
 .send-btn {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     background-color: rgba(30, 30, 60, 0.6);
@@ -665,7 +675,7 @@ input,
 }
 
 .settings-group {
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 .settings-group label {
@@ -689,7 +699,7 @@ input,
 
 .collapsible {
     background-color: rgba(30, 30, 60, 0.6);
-    padding: 10px;
+    padding: 12px 15px;
     border-radius: 4px;
     margin-bottom: 10px;
     cursor: pointer;
@@ -1102,7 +1112,7 @@ input,
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 8px;
+    padding: 0 10px;
     z-index: 3;
 }
 
@@ -1121,7 +1131,7 @@ input,
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 8px;
+    padding: 0 10px;
     z-index: 3;
 }
 
@@ -1132,18 +1142,27 @@ input,
 
 /* Media query for small height screens */
 @media (max-height: 600px) {
+    .sidebar {
+        padding: 15px 10px; /* Adjusted padding for small height screens */
+    }
+    
     .sidebar-controls {
-        gap: 10px;
+        gap: 15px; /* Adjusted gap for small height screens */
+        margin-top: 2px; /* Reduced top margin */
+    }
+    
+    .sidebar-bottom {
+        padding-bottom: 15px; /* Adjusted bottom padding */
     }
     
     .chat-history {
-        max-height: calc(var(--app-height) - 110px);
-        margin-bottom: 60px;
+        max-height: calc(var(--app-height) - 120px);
+        margin-bottom: calc(40px + 20px);
     }
     
     .text-input-container {
         height: 40px;
-        bottom: 10px;
+        bottom: 15px;
     }
     
     .camera-preview {
@@ -1161,8 +1180,17 @@ input,
 
 /* Media query for very small screens */
 @media (max-height: 450px) {
+    .sidebar {
+        padding: 12px 10px; /* Adjusted padding for very small height */
+    }
+    
     .sidebar-controls {
-        gap: 5px;
+        gap: 10px; /* Further reduced gap */
+        margin-top: 0; /* Remove top margin */
+    }
+    
+    .sidebar-bottom {
+        padding-bottom: 8px; /* Reduced bottom padding */
     }
     
     .disconnect-btn, 
@@ -1178,5 +1206,15 @@ input,
     .camera-preview, .screen-preview {
         max-width: 160px;
         max-height: calc(var(--app-height) - 120px);
+    }
+    
+    .chat-history {
+        max-height: calc(var(--app-height) - 100px);
+        margin-bottom: 60px; /* Further adjusted for very small screens */
+    }
+    
+    .text-input-container {
+        height: 35px;
+        bottom: 12px;
     }
 }
