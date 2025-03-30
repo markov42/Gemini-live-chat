@@ -1,0 +1,84 @@
+/* Glassmorphism Base Styles */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+  --glass-radius: 10px;
+  --glass-blur: 10px;
+  --glass-glow: 0 0 10px rgba(255, 255, 255, 0.5);
+  --glass-gradient: linear-gradient(
+    135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  --primary-font: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* Card/Container Elements */
+.card, .container, .panel, .dialog, .modal {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+  background-image: var(--glass-gradient);
+  /* Preserve existing padding/margin */
+}
+
+/* Buttons */
+button, .btn, input[type="submit"], input[type="button"] {
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+  transition: all 0.3s ease;
+  /* Keep existing padding/sizing */
+}
+
+button:hover, .btn:hover, input[type="submit"]:hover, input[type="button"]:hover {
+  box-shadow: var(--glass-glow), var(--glass-shadow);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Inputs */
+input[type="text"], input[type="email"], input[type="password"], textarea, select {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  color: inherit;
+  /* Preserve existing dimensions */
+}
+
+/* Chat bubbles */
+.message, .chat-bubble, .message-container > div {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Body background for better glassmorphism effect */
+body {
+  background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: var(--primary-font);
+  color: white;
+  /* Keep existing margin/padding */
+}
+
+/* Add subtle animations */
+@keyframes gentle-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.2); }
+  50% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.4); }
+}
+
+.interactive-element:hover {
+  animation: gentle-glow 2s infinite;
+} 

@@ -6,25 +6,27 @@ html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: blur(var(--blur-amount)) !important;
+    -webkit-backdrop-filter: blur(var(--blur-amount)) !important;
     will-change: backdrop-filter, background-color;
 }
 
 :root {
-    --bg-color: transparent;
-    --button-bg: rgba(45, 45, 45, 0.3);
-    --button-hover: rgba(61, 61, 61, 0.3);
+    --bg-color: rgba(18, 18, 18, 0.7); /* More opaque for better contrast */
+    --button-bg: rgba(255, 255, 255, 0.1); /* Glass-like */
+    --button-hover: rgba(255, 255, 255, 0.15); /* Slightly brighter */
     --text-color: #ffffff;
     --accent-color: hsl(197, 86%, 56%);
     --danger-color: #ff4444;
     --semi-transparent-bg: rgba(0, 0, 0, 0.2);
-    --acrylic-bg: rgba(18, 18, 18, 0.3);
+    --acrylic-bg: rgba(30, 30, 60, 0.2); /* Smoother transparency */
     --sidebar-width: 7%;
     --purple-gradient-start: rgba(103, 58, 183, 0.1);
     --blue-gradient-end: rgba(33, 150, 243, 0.1);
     --app-height: 100vh;
     --accent-color-rgb: 76, 175, 80;
+    --blur-amount: 20px; /* Standard blur */
+    --border-color: rgba(255, 255, 255, 0.15); /* Subtle border */
     
     /* Typography system */
     --font-primary: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -54,13 +56,13 @@ body {
     height: var(--app-height);
     display: flex;
     flex-direction: column;
-    /* Apply gradient background effect with less opacity */
-    background: linear-gradient(135deg, 
-        rgba(103, 58, 183, 0.05), 
-        rgba(33, 150, 243, 0.02)) !important;
+    /* Apply glassmorphic gradient background effect */
+    background: 
+        radial-gradient(at 20% 30%, rgba(103, 58, 183, 0.1) 0%, transparent 40%),
+        radial-gradient(at 80% 70%, rgba(33, 150, 243, 0.1) 0%, transparent 40%) !important;
     background-color: transparent !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: blur(var(--blur-amount)) !important;
+    -webkit-backdrop-filter: blur(var(--blur-amount)) !important;
     opacity: 0.95;
     overflow: hidden;
     will-change: backdrop-filter, background-color;
@@ -78,7 +80,9 @@ body.darwin {
     height: 100%;
     display: flex;
     overflow: hidden;
-    background-color: transparent !important;
+    background: transparent !important;
+    backdrop-filter: blur(var(--blur-amount)) !important;
+    -webkit-backdrop-filter: blur(var(--blur-amount)) !important;
     opacity: 0.95; /* Keep consistent opacity */
 }
 
@@ -101,7 +105,13 @@ body.darwin {
     align-items: center;
     justify-content: space-between;
     padding: 25px 10px;
-    background-color: transparent !important;
+    background: var(--acrylic-bg) !important;
+    backdrop-filter: blur(var(--blur-amount)) !important;
+    -webkit-backdrop-filter: blur(var(--blur-amount)) !important;
+    border-right: 1px solid var(--border-color);
+    box-shadow: 
+        0 0 15px rgba(0, 0, 0, 0.1),
+        inset 0 0 200px rgba(255, 255, 255, 0.02);
     z-index: 5;
     flex-shrink: 0; /* Prevent sidebar from shrinking */
 }
@@ -131,6 +141,13 @@ body.darwin {
     min-height: 0; /* Allow flex child to shrink */
     position: relative;
     padding: 15px;
+    background: var(--acrylic-bg) !important;
+    backdrop-filter: blur(var(--blur-amount)) !important;
+    -webkit-backdrop-filter: blur(var(--blur-amount)) !important;
+    border: 1px solid var(--border-color);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.2),
+        inset 0 0 200px rgba(255, 255, 255, 0.03);
 }
 
 /* Chat history with dynamic scrolling */
@@ -270,13 +287,15 @@ body.darwin {
     align-items: center;
     margin: 0;
     position: relative;
-    background: rgba(45, 45, 75, 0.12);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--button-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    box-shadow: 
+        0 4px 6px rgba(0, 0, 0, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1);
     color: var(--text-color);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     cursor: pointer;
     -webkit-app-region: no-drag;
 }
@@ -430,10 +449,10 @@ button:hover {
     padding: 12px;
     height: 50px; 
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background-color: rgba(30, 30, 60, 0.2);
-    backdrop-filter: blur(10px) brightness(1.1);
-    -webkit-backdrop-filter: blur(10px) brightness(1.1);
+    border: 1px solid var(--border-color) !important;
+    background: rgba(30, 30, 60, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
     -webkit-app-region: no-drag;
     color: var(--text-color);
     font-size: 16px;
@@ -451,17 +470,19 @@ button:hover {
     width: 48px;
     height: 48px;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background-color: rgba(30, 30, 60, 0.2);
-    backdrop-filter: blur(10px) brightness(1.1);
-    -webkit-backdrop-filter: blur(10px) brightness(1.1);
+    border: 1px solid var(--border-color) !important;
+    background: var(--button-bg) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    box-shadow: 
+        0 4px 6px rgba(0, 0, 0, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1);
     color: var(--accent-color);
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     font-size: 18px;
 }
 
@@ -765,7 +786,10 @@ button:hover {
     padding: 15px;
     border-radius: 15px;
     max-width: 80%;
+    width: auto;
     word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
     font-size: var(--font-size-base);
     line-height: var(--line-height-base);
     backdrop-filter: blur(10px) brightness(1.1);
@@ -808,6 +832,8 @@ button:hover {
     color: white;
     align-self: flex-start;
     margin-right: 20%;
+    max-width: 80%;
+    width: auto;
 }
 
 .model-message.streaming::after {
@@ -835,6 +861,7 @@ button:hover {
     font-size: var(--font-size-code);
     line-height: var(--line-height-code);
     white-space: pre;
+    max-width: 100%;
 }
 
 .code-block code {
@@ -884,6 +911,8 @@ button:hover {
 .model-message pre {
     max-width: 100%;
     margin: 0;
+    overflow-x: auto;
+    white-space: pre-wrap;
 }
 
 .refresh-btn {
@@ -1253,13 +1282,15 @@ button:hover {
     align-items: center;
     margin: 0;
     position: relative;
-    background: rgba(45, 45, 75, 0.12);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--button-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    box-shadow: 
+        0 4px 6px rgba(0, 0, 0, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1);
     color: var(--text-color);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     cursor: pointer;
     -webkit-app-region: no-drag;
 }
@@ -1372,9 +1403,9 @@ html {
 
 /* Ensure that the background doesn't change with focus */
 body {
-    background: linear-gradient(135deg, 
-        rgba(103, 58, 183, 0.05), 
-        rgba(33, 150, 243, 0.02)) !important;
+    background: 
+        radial-gradient(at 20% 30%, rgba(103, 58, 183, 0.05), transparent 40%),
+        radial-gradient(at 80% 70%, rgba(33, 150, 243, 0.05), transparent 40%) !important;
     background-color: transparent !important;
     -webkit-app-region: drag;
 }
@@ -1421,9 +1452,9 @@ body::before {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, 
-        rgba(103, 58, 183, 0.05), 
-        rgba(33, 150, 243, 0.02));
+    background: 
+        radial-gradient(at 20% 30%, rgba(103, 58, 183, 0.05), transparent 40%),
+        radial-gradient(at 80% 70%, rgba(33, 150, 243, 0.05), transparent 40%);
     z-index: -1;
     opacity: 0.95;
     pointer-events: none;
@@ -1441,8 +1472,8 @@ html.blurred {
     background-color: transparent !important;
     opacity: 0.95 !important;
     filter: none !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: blur(var(--blur-amount)) !important;
+    -webkit-backdrop-filter: blur(var(--blur-amount)) !important;
     will-change: backdrop-filter, background-color;
     transition: none !important;
 }
@@ -1490,8 +1521,8 @@ html.blurred {
 /* Add this new CSS rule at the bottom of the file to ensure backdrop filters remain active even when app loses focus */
 html:not(:focus-within), 
 body:not(:focus-within) {
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: blur(var(--blur-amount)) !important;
+    -webkit-backdrop-filter: blur(var(--blur-amount)) !important;
     background-color: transparent !important;
     opacity: 0.95;
 }
@@ -1508,8 +1539,8 @@ html.blurred {
     background-color: transparent !important;
     opacity: 0.95 !important;
     filter: none !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: blur(var(--blur-amount)) !important;
+    -webkit-backdrop-filter: blur(var(--blur-amount)) !important;
     will-change: backdrop-filter, background-color;
     transition: none !important;
 }
@@ -1522,8 +1553,8 @@ body::after {
     left: 0;
     right: 0;
     bottom: 0;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: blur(var(--blur-amount)) !important;
+    -webkit-backdrop-filter: blur(var(--blur-amount)) !important;
     z-index: -2;
     pointer-events: none;
 }
