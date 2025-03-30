@@ -1,14 +1,33 @@
-/* Base transparency and acrylic effect setup */
-html, body {
-    background-color: transparent !important;
-    -webkit-app-region: drag;
+/* Base transparency setup with consistent class */
+html, 
+html.consistent-transparency {
     height: 100%;
+    width: 100%;
     margin: 0;
     padding: 0;
     overflow: hidden;
+    background-color: transparent !important;
+}
+
+body {
+    -webkit-app-region: drag;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--acrylic-bg) !important;
     backdrop-filter: blur(var(--blur-amount)) !important;
     -webkit-backdrop-filter: blur(var(--blur-amount)) !important;
-    will-change: backdrop-filter, background-color;
+    color: var(--text-color);
+    font-family: var(--font-primary);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    display: flex;
+    flex-direction: column;
+    opacity: 0.95;
+    will-change: backdrop-filter;
+    box-sizing: border-box;
 }
 
 :root {
@@ -19,7 +38,7 @@ html, body {
     --accent-color: hsl(197, 86%, 56%);
     --danger-color: #ff4444;
     --semi-transparent-bg: rgba(0, 0, 0, 0.2);
-    --acrylic-bg: rgba(30, 30, 60, 0.2); /* Smoother transparency */
+    --acrylic-bg: rgba(30, 30, 60, 0.3); /* Increased opacity for better visibility */
     --sidebar-width: 7%;
     --purple-gradient-start: rgba(103, 58, 183, 0.1);
     --blue-gradient-end: rgba(33, 150, 243, 0.1);
@@ -36,6 +55,7 @@ html, body {
     --font-size-code: 14px;
     --line-height-base: 1.5;
     --line-height-code: 1.4;
+    --sidebar-bg: rgba(148, 148, 192, 0.6); /* More opaque sidebar background */
 }
 
 * {
@@ -48,42 +68,42 @@ html, body {
     scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
-body {
-    color: var(--text-color);
-    font-family: var(--font-primary);
-    font-size: var(--font-size-base);
-    line-height: var(--line-height-base);
-    height: var(--app-height);
-    display: flex;
-    flex-direction: column;
-    /* Apply glassmorphic gradient background effect */
-    background: 
-        radial-gradient(at 20% 30%, rgba(103, 58, 183, 0.1) 0%, transparent 40%),
-        radial-gradient(at 80% 70%, rgba(33, 150, 243, 0.1) 0%, transparent 40%) !important;
-    background-color: transparent !important;
-    backdrop-filter: blur(var(--blur-amount)) !important;
-    -webkit-backdrop-filter: blur(var(--blur-amount)) !important;
-    opacity: 0.95;
-    overflow: hidden;
-    will-change: backdrop-filter, background-color;
+/* Remove all body pseudo-elements that could add conflicting backgrounds */
+body::before, body::after {
+    content: none !important;
 }
 
-/* Adjust for macOS title bar */
+/* Adjust for macOS title bar with consistent glassmorphic style */
 body.darwin {
     padding-top: 28px; /* Space for macOS hidden title bar */
-    height: calc(var(--app-height) - 28px);
+    height: 100%; 
+    width: 100%;
+    margin: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+    background: var(--acrylic-bg) !important;
+    backdrop-filter: blur(var(--blur-amount)) !important;
+    -webkit-backdrop-filter: blur(var(--blur-amount)) !important;
+    box-sizing: border-box;
 }
 
+/* Ensure container has proper dimensions and transparency */
 .app-container {
     position: relative;
     width: 100%;
     height: 100%;
     display: flex;
     overflow: hidden;
-    background: transparent !important;
-    backdrop-filter: blur(var(--blur-amount)) !important;
-    -webkit-backdrop-filter: blur(var(--blur-amount)) !important;
-    opacity: 0.95; /* Keep consistent opacity */
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    opacity: 0.95;
+    box-sizing: border-box;
+    /* Add a safe bottom margin to avoid system overlays */
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 
 /* Main content layout */
@@ -94,6 +114,7 @@ body.darwin {
     height: 100%;
     min-width: 0; /* Prevent flex items from overflowing */
     position: relative;
+    background-color: transparent !important;
 }
 
 /* Sidebar with fixed width */
@@ -105,7 +126,7 @@ body.darwin {
     align-items: center;
     justify-content: space-between;
     padding: 25px 10px;
-    background: var(--acrylic-bg) !important;
+    background: var(--sidebar-bg) !important;
     backdrop-filter: blur(var(--blur-amount)) !important;
     -webkit-backdrop-filter: blur(var(--blur-amount)) !important;
     border-right: 1px solid var(--border-color);
@@ -179,7 +200,11 @@ body.darwin {
     gap: 10px;
     align-items: center;
     z-index: 10;
-    background-color: transparent;
+    background: var(--acrylic-bg) !important;
+    margin-bottom: 0;
+    padding-bottom: 5px; /* Add a bit of padding at the bottom */
+    backdrop-filter: blur(var(--blur-amount)) !important;
+    -webkit-backdrop-filter: blur(var(--blur-amount)) !important;
 }
 
 /* Mobile layout adjustments */
@@ -287,12 +312,12 @@ body.darwin {
     align-items: center;
     margin: 0;
     position: relative;
-    background: var(--button-bg) !important;
+    background: rgba(45, 45, 75, 0.6) !important;
     border: 1px solid var(--border-color) !important;
     backdrop-filter: blur(10px) !important;
     -webkit-backdrop-filter: blur(10px) !important;
     box-shadow: 
-        0 4px 6px rgba(0, 0, 0, 0.1),
+        0 4px 6px rgba(0, 0, 0, 0.2),
         inset 0 1px 1px rgba(255, 255, 255, 0.1);
     color: var(--text-color);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -786,54 +811,31 @@ button:hover {
     padding: 15px;
     border-radius: 15px;
     max-width: 80%;
-    width: auto;
     word-wrap: break-word;
     word-break: break-word;
     overflow-wrap: break-word;
     font-size: var(--font-size-base);
     line-height: var(--line-height-base);
-    backdrop-filter: blur(10px) brightness(1.1);
-    -webkit-backdrop-filter: blur(10px) brightness(1.1);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* List styling in chat messages */
-.chat-message ul,
-.chat-message ol {
-    margin: 0.8em 0;
-    padding-left: 1.5em;
-    line-height: var(--line-height-base);
-}
-
-.chat-message li {
-    margin: 0.4em 0;
-}
-
-.chat-message ol {
-    list-style-type: decimal;
-    list-style-position: outside;
-}
-
-.chat-message ul {
-    list-style-type: disc;
-    list-style-position: outside;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.05);
 }
 
 .user-message {
-    background-color: rgba(0, 120, 255, 0.15);
+    background: rgba(0, 120, 255, 0.15) !important;
     color: white;
     align-self: flex-end;
     margin-left: 20%;
 }
 
 .model-message {
-    background-color: rgba(40, 40, 70, 0.15);
+    background: rgba(40, 40, 70, 0.15) !important;
     color: white;
     align-self: flex-start;
     margin-right: 20%;
-    max-width: 80%;
-    width: auto;
 }
 
 .model-message.streaming::after {
@@ -1402,12 +1404,8 @@ html {
 }
 
 /* Ensure that the background doesn't change with focus */
-body {
-    background: 
-        radial-gradient(at 20% 30%, rgba(103, 58, 183, 0.05), transparent 40%),
-        radial-gradient(at 80% 70%, rgba(33, 150, 243, 0.05), transparent 40%) !important;
-    background-color: transparent !important;
-    -webkit-app-region: drag;
+body::before, body::after {
+    content: none !important;
 }
 
 /* Overlay transparency */
