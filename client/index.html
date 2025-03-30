@@ -12,22 +12,28 @@
         <div class="sidebar">
             <!-- Sidebar Controls -->
             <div class="sidebar-controls">
-                <button id="disconnectBtn" class="disconnect-btn" title="Disconnect"></button>
-                <button id="connectBtn" class="connect-btn" style="display: none;" title="Connect"></button>
+                <button id="disconnectBtn" class="disconnect-btn" title="Disconnect">
+                    <img src="images/power.svg" alt="Disconnect" class="button-icon">
+                </button>
+                <button id="connectBtn" class="connect-btn" style="display: none;" title="Connect">
+                    <img src="images/power.svg" alt="Connect" class="button-icon">
+                </button>
                 <button id="cameraBtn" class="camera-btn" title="Toggle Camera">
-                    <span class="camera-icon">📷</span>
+                    <img src="images/camera.svg" alt="Camera" class="button-icon">
                 </button>
                 <button id="screenBtn" class="screen-btn" title="Toggle Screen Share">
-                    <span class="screen-icon">🖥️</span>
+                    <img src="images/monitor.svg" alt="Screen Share" class="button-icon">
                 </button>
                 <button id="micBtn" class="mic-btn" title="Toggle Microphone">
-                    <span class="mic-icon">🎤</span>
+                    <img src="images/mic.svg" alt="Microphone" class="button-icon">
                 </button>
             </div>
             
             <!-- Bottom Section -->
             <div class="sidebar-bottom">
-                <button id="settingsBtn" class="settings-btn" title="Settings">⚙️</button>
+                <button id="settingsBtn" class="settings-btn" title="Settings">
+                    <img src="images/settings.svg" alt="Settings" class="button-icon">
+                </button>
             </div>
         </div>
         
@@ -37,7 +43,9 @@
             <div id="screenPreview" class="screen-preview"></div>
             <div class="text-input-container">
                 <input type="text" id="messageInput" placeholder="Type your message..." class="text-input">
-                <button id="sendBtn" class="send-btn">➤</button>
+                <button id="sendBtn" class="send-btn">
+                    <img src="images/send.svg" alt="Send" class="button-icon">
+                </button>
             </div>
         </div>
     </div>

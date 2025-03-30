@@ -98,3 +98,81 @@ geminiAgent.on('text', (text) => {
 geminiAgent.connect();
 
 setupEventListeners(geminiAgent);
+
+// Force consistent transparency on focus/blur with improved handling
+window.addEventListener('blur', maintainTransparency);
+window.addEventListener('focus', maintainTransparency);
+window.addEventListener('visibilitychange', maintainTransparency);
+document.addEventListener('visibilitychange', maintainTransparency);
+
+// Initial call to set consistent transparency
+document.addEventListener('DOMContentLoaded', () => {
+    maintainTransparency();
+    // Apply transparency again after a short delay to catch any transitions
+    setTimeout(maintainTransparency, 100);
+    setTimeout(maintainTransparency, 500);
+});
+
+// Special handler to force proper transparency across focus changes
+function maintainTransparency() {
+    // Add classes to force consistent styling
+    document.documentElement.classList.add('consistent-transparency');
+    
+    // Force transparent background
+    document.body.style.backgroundColor = 'transparent';
+    document.documentElement.style.backgroundColor = 'transparent';
+    
+    // Apply extremely light gradient
+    document.body.style.background = 'linear-gradient(135deg, rgba(103, 58, 183, 0.05), rgba(33, 150, 243, 0.02))';
+    
+    // Force specific opacity
+    document.body.style.opacity = '0.95';
+    document.documentElement.style.opacity = '0.95';
+    
+    // Remove any filters that might affect transparency
+    document.body.style.filter = 'none';
+    document.documentElement.style.filter = 'none';
+    
+    // Force consistent backdrop filters on key elements
+    const transparentElements = [
+        '.chat-history', '.camera-preview', '.screen-preview', 
+        '.settings-dialog', '.source-selection-dialog', '.text-input', 
+        '.send-btn', '.sidebar', '.disconnect-btn', '.connect-btn',
+        '.settings-btn', '.camera-btn', '.screen-btn', '.mic-btn',
+        '.app-container'
+    ];
+    
+    transparentElements.forEach(selector => {
+        document.querySelectorAll(selector).forEach(el => {
+            el.style.backgroundColor = 'rgba(30, 30, 60, 0.1)';
+            el.style.backdropFilter = 'blur(8px)';
+            el.style.webkitBackdropFilter = 'blur(8px)';
+        });
+    });
+    
+    // Create the absolute positioned elements for persistent backdrop filter if they don't exist
+    ensureBackdropElements('.chat-area');
+    ensureBackdropElements('.sidebar');
+}
+
+// Helper function to create persistent backdrop filter elements
+function ensureBackdropElements(selector) {
+    document.querySelectorAll(selector).forEach(el => {
+        if (!el.querySelector('.backdrop-persistent')) {
+            const backdropEl = document.createElement('div');
+            backdropEl.className = 'backdrop-persistent';
+            backdropEl.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                pointer-events: none;
+                z-index: -1;
+            `;
+            el.prepend(backdropEl);
+        }
+    });
+}

@@ -11,15 +11,15 @@ html, body {
 :root {
     --bg-color: transparent;
     --button-bg: rgba(45, 45, 45, 0.3);
-    --button-hover: rgba(61, 61, 61, 0.4);
+    --button-hover: rgba(61, 61, 61, 0.3);
     --text-color: #ffffff;
     --accent-color: hsl(197, 86%, 56%);
     --danger-color: #ff4444;
-    --semi-transparent-bg: rgba(0, 0, 0, 0.2);
-    --acrylic-bg: rgba(20, 20, 20, 0.2);
+    --semi-transparent-bg: rgba(0, 0, 0, 0.1);
+    --acrylic-bg: rgba(18, 18, 18, 0.3);
     --sidebar-width: 7%;
-    --purple-gradient-start: rgba(103, 58, 183, 0.5);
-    --blue-gradient-end: rgba(33, 150, 243, 0.5);
+    --purple-gradient-start: rgba(103, 58, 183, 0.15);
+    --blue-gradient-end: rgba(33, 150, 243, 0.1);
     --app-height: 100vh;
     --accent-color-rgb: 76, 175, 80;
     
@@ -51,10 +51,14 @@ body {
     height: var(--app-height);
     display: flex;
     flex-direction: column;
-    /* Apply gradient background effect */
-    background: linear-gradient(135deg, var(--purple-gradient-start), var(--blue-gradient-end));
+    /* Apply gradient background effect with less opacity */
+    background: linear-gradient(135deg, 
+        rgba(103, 58, 183, 0.05), 
+        rgba(33, 150, 243, 0.02)) !important;
+    background-color: transparent !important;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+    opacity: 0.95;
     overflow: hidden;
 }
 
@@ -70,7 +74,8 @@ body.darwin {
     height: 100%;
     display: flex;
     overflow: hidden;
-    background-color: transparent;
+    background-color: transparent !important;
+    opacity: 0.95; /* Keep consistent opacity */
 }
 
 /* Main content layout */
@@ -92,7 +97,7 @@ body.darwin {
     align-items: center;
     justify-content: space-between;
     padding: 25px 10px;
-    background-color: transparent;
+    background-color: transparent !important;
     z-index: 5;
     flex-shrink: 0; /* Prevent sidebar from shrinking */
 }
@@ -135,10 +140,11 @@ body.darwin {
     padding: 15px;
     margin-bottom: 70px; /* Space for input container */
     border-radius: 10px;
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background-color: rgba(30, 30, 60, 0.12) !important;
 }
 
 /* Text input container with fixed position */
@@ -260,9 +266,9 @@ body.darwin {
     align-items: center;
     margin: 0;
     position: relative;
-    background: rgba(45, 45, 75, 0.15);
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    background: rgba(45, 45, 75, 0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     color: var(--text-color);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -278,19 +284,23 @@ body.darwin {
 .camera-btn:hover,
 .screen-btn:hover,
 .mic-btn:hover {
-    background-color: rgba(60, 60, 90, 0.25);
+    background-color: rgba(60, 60, 90, 0.18) !important;
     transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Active state with glowing effect */
+/* Override active states to maintain consistent transparency */
 .camera-btn.active,
 .screen-btn.active,
 .mic-btn.active {
-    background: rgba(var(--accent-color-rgb, 76, 175, 80), 0.3);
-    border-color: var(--accent-color);
-    box-shadow: 0 0 15px rgba(var(--accent-color-rgb, 76, 175, 80), 0.3);
+    background-color: rgba(var(--accent-color-rgb, 76, 175, 80), 0.2) !important;
+    box-shadow: 0 0 15px rgba(var(--accent-color-rgb, 76, 175, 80), 0.2);
+}
+
+/* Ensure transparency is maintained on hover */
+button:hover {
+    background-color: rgba(60, 60, 90, 0.18) !important;
 }
 
 /* Special styling for disconnect button */
@@ -327,11 +337,13 @@ body.darwin {
 .disconnect-btn::before {
     content: "⏻";
     font-size: 18px;
+    opacity: 0.9;
 }
 
 .connect-btn::before {
     content: "⏻";
     font-size: 18px;
+    opacity: 0.9;
 }
 
 /* Buttons with improved styling */
@@ -406,7 +418,7 @@ body.darwin {
 }
 
 .mic-icon {
-    font-size: 16px;
+    display: none;
 }
 
 .text-input {
@@ -416,8 +428,8 @@ body.darwin {
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background-color: rgba(30, 30, 60, 0.2);
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    backdrop-filter: blur(10px) brightness(1.1);
+    -webkit-backdrop-filter: blur(10px) brightness(1.1);
     -webkit-app-region: no-drag;
     color: var(--text-color);
     font-size: 16px;
@@ -437,8 +449,8 @@ body.darwin {
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background-color: rgba(30, 30, 60, 0.2);
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    backdrop-filter: blur(10px) brightness(1.1);
+    -webkit-backdrop-filter: blur(10px) brightness(1.1);
     color: var(--accent-color);
     cursor: pointer;
     display: flex;
@@ -446,6 +458,7 @@ body.darwin {
     align-items: center;
     transition: all 0.3s ease;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-size: 18px;
 }
 
 .send-btn:hover {
@@ -468,8 +481,8 @@ body.darwin {
     cursor: move;
     user-select: none;
     background-color: rgba(30, 30, 60, 0.15);
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    backdrop-filter: blur(10px) brightness(1.1);
+    -webkit-backdrop-filter: blur(10px) brightness(1.1);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -489,8 +502,8 @@ body.darwin {
     cursor: move;
     user-select: none;
     background-color: rgba(30, 30, 60, 0.15);
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    backdrop-filter: blur(10px) brightness(1.1);
+    -webkit-backdrop-filter: blur(10px) brightness(1.1);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -498,8 +511,8 @@ body.darwin {
 /* Preview headers with improved translucency */
 .camera-preview-header, .screen-preview-header {
     background-color: rgba(30, 30, 60, 0.15);
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    backdrop-filter: blur(10px) brightness(1.1);
+    -webkit-backdrop-filter: blur(10px) brightness(1.1);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -658,8 +671,8 @@ body.darwin {
     overflow-y: auto;
     z-index: 1001;
     background-color: rgba(30, 30, 60, 0.15);
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    backdrop-filter: blur(10px) brightness(1.1);
+    -webkit-backdrop-filter: blur(10px) brightness(1.1);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
@@ -674,9 +687,9 @@ body.darwin {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--semi-transparent-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background-color: rgba(0, 0, 0, 0.15) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 1000;
 }
 
@@ -699,8 +712,8 @@ body.darwin {
     width: 100%;
     padding: 8px;
     background-color: rgba(30, 30, 60, 0.2);
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    backdrop-filter: blur(10px) brightness(1.1);
+    -webkit-backdrop-filter: blur(10px) brightness(1.1);
     -webkit-app-region: no-drag;
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 4px;
@@ -713,8 +726,8 @@ body.darwin {
     border-radius: 4px;
     margin-bottom: 10px;
     cursor: pointer;
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    backdrop-filter: blur(10px) brightness(1.1);
+    -webkit-backdrop-filter: blur(10px) brightness(1.1);
     -webkit-app-region: no-drag;
 }
 
@@ -751,8 +764,8 @@ body.darwin {
     word-wrap: break-word;
     font-size: var(--font-size-base);
     line-height: var(--line-height-base);
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    backdrop-filter: blur(10px) brightness(1.1);
+    -webkit-backdrop-filter: blur(10px) brightness(1.1);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -808,8 +821,8 @@ body.darwin {
 /* Code Block Styling */
 .code-block {
     background-color: rgba(0, 0, 0, 0.15);
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    backdrop-filter: blur(10px) brightness(1.1);
+    -webkit-backdrop-filter: blur(10px) brightness(1.1);
     border-radius: 6px;
     padding: 12px 15px;
     margin: 0.8em 0;
@@ -907,20 +920,20 @@ body.darwin {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 100;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
 }
 
 .source-selection-dialog {
-    background-color: rgba(30, 30, 60, 0.15);
+    background-color: rgba(30, 30, 60, 0.25);
     backdrop-filter: blur(20px) brightness(1.1);
     -webkit-backdrop-filter: blur(20px) brightness(1.1);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 12px;
     padding: 20px;
     width: 80%;
@@ -950,8 +963,8 @@ body.darwin {
 /* Source item with improved glassmorphic design */
 .source-item {
     background-color: rgba(40, 40, 70, 0.15);
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    backdrop-filter: blur(10px) brightness(1.1);
+    -webkit-backdrop-filter: blur(10px) brightness(1.1);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 15px;
@@ -1155,8 +1168,8 @@ body.darwin {
     right: 0;
     height: 30px;
     background-color: rgba(30, 30, 60, 0.15);
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    backdrop-filter: blur(10px) brightness(1.1);
+    -webkit-backdrop-filter: blur(10px) brightness(1.1);
     -webkit-app-region: drag;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
@@ -1174,8 +1187,8 @@ body.darwin {
     right: 0;
     height: 30px;
     background-color: rgba(30, 30, 60, 0.15);
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    backdrop-filter: blur(10px) brightness(1.1);
+    -webkit-backdrop-filter: blur(10px) brightness(1.1);
     -webkit-app-region: drag;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
@@ -1236,13 +1249,234 @@ body.darwin {
     align-items: center;
     margin: 0;
     position: relative;
-    background: rgba(45, 45, 75, 0.15);
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    background: rgba(45, 45, 75, 0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     color: var(--text-color);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     cursor: pointer;
     -webkit-app-region: no-drag;
+}
+
+/* Button icon styling */
+.button-icon {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1); /* Makes the SVG white */
+    transition: all 0.3s ease;
+}
+
+/* Special styling for disconnect button */
+.disconnect-btn .button-icon {
+    filter: brightness(0) invert(0.7) sepia(1) saturate(5) hue-rotate(-50deg); /* Makes the SVG red */
+}
+
+.disconnect-btn:hover .button-icon {
+    filter: brightness(0) invert(0.7) sepia(1) saturate(8) hue-rotate(-50deg); /* Brighter red on hover */
+}
+
+/* Special styling for connect button */
+.connect-btn .button-icon {
+    filter: brightness(0) invert(0.8) sepia(1) saturate(5) hue-rotate(70deg); /* Makes the SVG green */
+}
+
+.connect-btn:hover .button-icon {
+    filter: brightness(0) invert(0.8) sepia(1) saturate(8) hue-rotate(70deg); /* Brighter green on hover */
+}
+
+/* Active state styling for buttons */
+.camera-btn.active .button-icon,
+.screen-btn.active .button-icon,
+.mic-btn.active .button-icon {
+    filter: brightness(0) invert(0.8) sepia(1) saturate(5) hue-rotate(70deg); /* Green when active */
+}
+
+/* Hover effect for icons */
+.camera-btn:hover .button-icon,
+.screen-btn:hover .button-icon,
+.mic-btn:hover .button-icon,
+.settings-btn:hover .button-icon,
+.send-btn:hover .button-icon {
+    transform: scale(1.1);
+}
+
+/* Send button styling */
+.send-btn .button-icon {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0) invert(0.8) sepia(1) saturate(2) hue-rotate(170deg); /* Light blue color */
+}
+
+.send-btn:hover .button-icon {
+    filter: brightness(0) invert(1); /* White on hover */
+}
+
+/* Remove old icon styles */
+.camera-icon,
+.screen-icon,
+.mic-icon {
+    display: none;
+}
+
+/* Remove old connect/disconnect button styles */
+.disconnect-btn::before,
+.connect-btn::before {
+    content: none;
+}
+
+/* Add focus/blur-independent styles */
+:root.blurred .app-container,
+.app-container:not(:focus-within) {
+    opacity: 0.95 !important; /* Same as focused state */
+    filter: none !important; /* Remove any filter */
+}
+
+/* Apply consistent transparency */
+.app-container, 
+body, 
+html {
+    opacity: 0.95 !important;
+    filter: none !important;
+}
+
+/* Ensure all elements have consistent backdrop-filter */
+.chat-history,
+.camera-preview,
+.screen-preview,
+.camera-preview-header,
+.screen-preview-header,
+.settings-dialog,
+.source-selection-dialog,
+.text-input,
+.send-btn,
+.disconnect-btn, 
+.connect-btn,
+.settings-btn,
+.camera-btn,
+.screen-btn,
+.mic-btn,
+.source-item,
+.collapsible-content,
+.settings-group select,
+.settings-group input {
+    background-color: rgba(30, 30, 60, 0.12) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* Ensure that the background doesn't change with focus */
+body {
+    background: linear-gradient(135deg, 
+        rgba(103, 58, 183, 0.05), 
+        rgba(33, 150, 243, 0.02)) !important;
+    background-color: transparent !important;
+    -webkit-app-region: drag;
+}
+
+/* Overlay transparency */
+.settings-overlay,
+.source-selection-overlay {
+    background-color: rgba(0, 0, 0, 0.15) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* Force consistent transparency for all states */
+body:not(:focus-within),
+body:not(.focused),
+body.blurred,
+.app-container:not(:focus-within) {
+    opacity: 0.95 !important;
+    background-color: transparent !important;
+    filter: none !important;
+}
+
+/* Override any browser or Electron focus-related filters */
+html, body, .app-container {
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+.sidebar {
+    background-color: transparent !important;
+}
+
+/* Ensure background transparency at all times */
+.app-container {
+    background-color: transparent !important;
+}
+
+/* Force consistent transparency regardless of focus state */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(103, 58, 183, 0.05), 
+        rgba(33, 150, 243, 0.02));
+    z-index: -1;
+    opacity: 0.95;
+    pointer-events: none;
+}
+
+/* Override any browser or Electron focus-related styles */
+body,
+body:not(:focus-within),
+body:not(.focused),
+body.blurred,
+html,
+html:not(:focus-within),
+html:not(.focused),
+html.blurred {
+    background-color: transparent !important;
+    opacity: 0.95 !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* Ensure consistent backdrop filter for all UI components */
+.chat-history,
+.camera-preview,
+.screen-preview,
+.camera-preview-header,
+.screen-preview-header,
+.settings-dialog,
+.source-selection-dialog,
+.text-input,
+.send-btn,
+.disconnect-btn, 
+.connect-btn,
+.settings-btn,
+.camera-btn,
+.screen-btn,
+.mic-btn,
+.source-item,
+.collapsible-content,
+.settings-group select,
+.settings-group input {
+    background-color: rgba(30, 30, 60, 0.1) !important;
+    box-shadow: 0 0 1px rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Force backdrop filter to stay active even when window loses focus */
+.chat-area::before,
+.sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    pointer-events: none;
+    z-index: -1;
 }
