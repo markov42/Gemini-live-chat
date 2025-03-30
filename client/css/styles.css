@@ -31,13 +31,13 @@ body {
 }
 
 :root {
-    --bg-color: rgba(45, 45, 60, 0.7); /* Darker background */
+    --bg-color: rgba(45, 45, 60, 0.4); /* Darker background */
     --button-bg: rgba(60, 60, 75, 0.3); /* Darker buttons */
     --button-hover: rgba(70, 70, 85, 0.4); /* Slightly brighter on hover */
     --text-color: #E8E8E8; /* Lighter text for better contrast on dark background */
     --accent-color: hsl(210, 60%, 60%); /* Brighter blue accent */
     --danger-color: #ff4444;
-    --semi-transparent-bg: rgba(50, 50, 65, 0.3);
+    --semi-transparent-bg: rgba(45, 45, 60, 0.4);
     --acrylic-bg: rgba(40, 40, 55, 0.4); /* Darker acrylic background */
     --sidebar-width: 7%;
     --purple-gradient-start: rgba(50, 50, 80, 0.1); /* Darker gradient */
@@ -221,13 +221,13 @@ body.darwin {
     gap: 10px;
     align-items: center;
     z-index: 10;
-    background: rgba(45, 45, 60, 0.4) !important; /* Match chat area */
+    background: transparent !important; /* Make container invisible */
     margin-bottom: 0;
-    padding-bottom: 5px; /* Add a bit of padding at the bottom */
-    backdrop-filter: blur(var(--blur-amount)) !important;
-    -webkit-backdrop-filter: blur(var(--blur-amount)) !important;
-    border-radius: 8px;
-    border: 1px solid rgba(100, 100, 130, 0.2);
+    padding-bottom: 5px;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none;
+    box-shadow: none;
 }
 
 /* Mobile layout adjustments */
@@ -555,8 +555,8 @@ button:hover {
     position: absolute;
     bottom: 75px;
     right: 15px;
-    width: 300px;
-    height: 200px;
+    width: 240px; /* Reduced from 300px */
+    height: 160px; /* Reduced from 200px */
     border-radius: 12px;
     overflow: hidden;
     display: none;
@@ -574,8 +574,8 @@ button:hover {
     position: absolute;
     bottom: 75px;
     right: 15px;
-    width: 300px;
-    height: 200px;
+    width: 240px; /* Reduced from 300px */
+    height: 160px; /* Reduced from 200px */
     border-radius: 12px;
     overflow: hidden;
     display: none;
@@ -676,20 +676,20 @@ button:hover {
     overflow: hidden;
 }
 
-/* Media query for devices with width less than 340px */
+/* Media query for devices with width less than 340px - adjusted proportionally */
 @media (max-width: 340px) {
     .camera-preview {
-        width: 180px;
-        height: 135px; /* Maintain 4:3 aspect ratio */
+        width: 160px; /* Reduced from 180px */
+        height: 120px; /* Maintained aspect ratio */
         right: 15px;
         bottom: 90px;
     }
     
     .screen-preview {
-        width: 180px;
-        height: 101px; /* Maintain 16:9 aspect ratio */
+        width: 160px; /* Reduced from 180px */
+        height: 90px; /* Maintained 16:9 aspect ratio */
         right: 15px;
-        bottom: 250px;
+        bottom: 230px;
     }
 }
 
@@ -1097,9 +1097,56 @@ button:hover {
     cursor: not-allowed;
 }
 
-/* Add a button to the screen preview header to select source */
+/* Add a button to the screen preview header to select source - improved styling with SVG icon */
 .source-select-btn {
+    width: 20px;
+    height: 20px;
+    background: transparent;
+    border: none;
+    padding: 0;
     margin-right: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+    background-image: url('../images/menu.svg');
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    font-size: 0; /* Hide any text content */
+    color: transparent; /* Hide any text content */
+    overflow: hidden;
+    filter: brightness(0) invert(1); /* Make SVG icon white */
+}
+
+.source-select-btn:hover {
+    opacity: 1;
+}
+
+/* Hide any child elements inside the source-select-btn */
+.source-select-btn * {
+    display: none;
+}
+
+/* Ensure proper screen preview header layout */
+.screen-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    z-index: 10;
+}
+
+.screen-preview-title {
+    flex: 1;
+    text-align: center;
+}
+
+.screen-preview-controls {
+    display: flex;
+    align-items: center;
 }
 
 /* Context menu for screen button with grid-aware positioning */
@@ -1680,8 +1727,8 @@ body::after {
     position: absolute;
     bottom: 75px;
     right: 15px;
-    width: 300px;
-    height: 200px;
+    width: 240px; /* Reduced from 300px */
+    height: 160px; /* Reduced from 200px */
     border-radius: 12px;
     overflow: hidden;
     display: none;
@@ -1699,8 +1746,8 @@ body::after {
     position: absolute;
     bottom: 75px;
     right: 15px;
-    width: 300px;
-    height: 200px;
+    width: 240px; /* Reduced from 300px */
+    height: 160px; /* Reduced from 200px */
     border-radius: 12px;
     overflow: hidden;
     display: none;
