@@ -348,17 +348,82 @@ body.darwin {
     -webkit-app-region: no-drag;
 }
 
-/* Enhanced hover effects for all sidebar buttons */
+/* Enhanced hover effects for all sidebar buttons - simplified */
 .disconnect-btn:hover,
 .connect-btn:hover,
 .settings-btn:hover,
 .camera-btn:hover,
 .screen-btn:hover,
 .mic-btn:hover {
-    background-color: rgba(70, 70, 85, 0.6) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    border-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(65, 65, 80, 0.7) !important;
+    transform: none;
+    box-shadow: none;
+    border-color: rgba(100, 100, 130, 0.4);
+}
+
+/* Ensure transparency is maintained on hover - simplified */
+button:hover {
+    background-color: rgba(65, 65, 80, 0.5) !important;
+}
+
+/* Special styling for disconnect button - simplified hover */
+.disconnect-btn:hover {
+    background: rgba(255, 68, 68, 0.25);
+    border-color: rgba(255, 68, 68, 0.3);
+    box-shadow: none;
+}
+
+/* Special styling for connect button - simplified hover */
+.connect-btn:hover {
+    background: rgba(76, 175, 80, 0.25);
+    border-color: rgba(76, 175, 80, 0.3);
+    box-shadow: none;
+}
+
+/* Camera and screen button hover - simplified */
+.camera-btn:hover,
+.screen-btn:hover,
+.mic-btn:hover {
+    background-color: rgba(65, 65, 80, 0.6) !important;
+    transform: none;
+}
+
+/* Send button hover - simplified */
+.send-btn:hover {
+    background: rgba(65, 65, 80, 0.6) !important;
+    transform: none;
+}
+
+/* Source item hover - simplified */
+.source-item:hover {
+    background-color: rgba(60, 60, 80, 0.6) !important;
+    box-shadow: none;
+    transform: none;
+}
+
+/* Select btn hover - simplified */
+.select-btn:hover:not(:disabled) {
+    background-color: rgba(76, 175, 80, 0.7);
+    transform: none;
+    box-shadow: none;
+}
+
+/* Hover and active states for sidebar buttons - simplified */
+.disconnect-btn:hover,
+.connect-btn:hover,
+.settings-btn:hover,
+.camera-btn:hover,
+.screen-btn:hover,
+.mic-btn:hover {
+    background-color: var(--button-hover);
+    transform: none;
+}
+
+/* Text input focus - simplified */
+.text-input:focus {
+    border-color: var(--accent-color);
+    background: rgba(55, 55, 75, 0.4);
+    box-shadow: none;
 }
 
 /* Override active states to maintain consistent transparency */
@@ -366,36 +431,7 @@ body.darwin {
 .screen-btn.active,
 .mic-btn.active {
     background-color: rgba(var(--accent-color-rgb, 100, 150, 200), 0.3) !important;
-    box-shadow: 0 0 15px rgba(var(--accent-color-rgb, 100, 150, 200), 0.2);
-}
-
-/* Ensure transparency is maintained on hover */
-button:hover {
-    background-color: rgba(70, 70, 85, 0.4) !important;
-}
-
-/* Special styling for disconnect button */
-.disconnect-btn {
-    background: rgba(255, 68, 68, 0.2);
-    border-color: rgba(255, 68, 68, 0.3);
-}
-
-.disconnect-btn:hover {
-    background: rgba(255, 68, 68, 0.3);
-    border-color: rgba(255, 68, 68, 0.4);
-    box-shadow: 0 6px 12px rgba(255, 68, 68, 0.2);
-}
-
-/* Special styling for connect button */
-.connect-btn {
-    background: rgba(76, 175, 80, 0.2);
-    border-color: rgba(76, 175, 80, 0.3);
-}
-
-.connect-btn:hover {
-    background: rgba(76, 175, 80, 0.3);
-    border-color: rgba(76, 175, 80, 0.4);
-    box-shadow: 0 6px 12px rgba(76, 175, 80, 0.2);
+    box-shadow: none;
 }
 
 /* Remove text for icon-only layout */
@@ -519,12 +555,6 @@ button:hover {
     -webkit-backdrop-filter: blur(10px);
 }
 
-.text-input:focus {
-    border-color: var(--accent-color);
-    background: rgba(55, 55, 75, 0.4);
-    box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.2);
-}
-
 .send-btn {
     width: 40px;
     height: 40px;
@@ -621,7 +651,8 @@ button:hover {
 }
 
 .camera-preview-btn:hover {
-    color: var(--accent-color);
+    color: var(--text-color);
+    transform: none;
 }
 
 .camera-preview video {
@@ -661,7 +692,8 @@ button:hover {
 }
 
 .screen-preview-btn:hover {
-    color: var(--accent-color);
+    color: var(--text-color);
+    transform: none;
 }
 
 .screen-preview video {
@@ -961,7 +993,8 @@ button:hover {
 }
 
 .refresh-btn:hover {
-    background-color: #45a049;
+    background-color: var(--accent-color);
+    opacity: 0.9;
 }
 
 #audioInput, #videoInput {
@@ -1040,8 +1073,8 @@ button:hover {
 
 .source-item:hover {
     background-color: rgba(60, 60, 80, 0.6) !important;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
+    box-shadow: none;
+    transform: none;
 }
 
 .source-item.selected {
@@ -1087,9 +1120,9 @@ button:hover {
 }
 
 .select-btn:hover:not(:disabled) {
-    background-color: rgba(76, 175, 80, 0.8);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    background-color: rgba(76, 175, 80, 0.7);
+    transform: none;
+    box-shadow: none;
 }
 
 .select-btn:disabled {
@@ -1122,7 +1155,7 @@ button:hover {
 }
 
 .source-select-btn:hover {
-    opacity: 1;
+    opacity: 0.9;
 }
 
 /* Hide any child elements inside the source-select-btn */
@@ -1254,7 +1287,7 @@ button:hover {
     scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
-/* Hover and active states for sidebar buttons */
+/* Hover and active states for sidebar buttons - simplified */
 .disconnect-btn:hover,
 .connect-btn:hover,
 .settings-btn:hover,
@@ -1262,13 +1295,14 @@ button:hover {
 .screen-btn:hover,
 .mic-btn:hover {
     background-color: var(--button-hover);
-    transform: scale(1.05);
+    transform: none;
 }
 
 .camera-btn.active,
 .screen-btn.active,
 .mic-btn.active {
-    background-color: var(--accent-color);
+    background-color: rgba(var(--accent-color-rgb, 100, 150, 200), 0.3) !important;
+    box-shadow: none;
 }
 
 /* Camera preview header with position properties */
@@ -1412,7 +1446,7 @@ button:hover {
 .mic-btn:hover .button-icon,
 .settings-btn:hover .button-icon,
 .send-btn:hover .button-icon {
-    transform: scale(1.1);
+    transform: none;
 }
 
 /* Send button styling */
@@ -1711,15 +1745,15 @@ body::after {
 .camera-btn:hover,
 .screen-btn:hover,
 .mic-btn:hover {
-    background-color: rgba(70, 70, 85, 0.6) !important;
-    transform: translateY(-2px);
+    background-color: rgba(65, 65, 80, 0.6) !important;
+    transform: none;
 }
 
 .camera-btn.active,
 .screen-btn.active,
 .mic-btn.active {
-    background-color: rgba(var(--accent-color-rgb), 0.2) !important;
-    box-shadow: 0 0 15px rgba(var(--accent-color-rgb), 0.2);
+    background-color: rgba(var(--accent-color-rgb, 100, 150, 200), 0.3) !important;
+    box-shadow: none;
 }
 
 /* Camera preview */
@@ -1758,4 +1792,149 @@ body::after {
     border: 1px solid rgba(100, 100, 130, 0.3) !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     z-index: 100;
+}
+
+/* Remove hover effects on preview buttons */
+.camera-preview-btn:hover,
+.screen-preview-btn:hover {
+    color: var(--text-color);
+    transform: none;
+}
+
+/* Fix button icon hover effects */
+.camera-btn:hover .button-icon,
+.screen-btn:hover .button-icon,
+.mic-btn:hover .button-icon,
+.settings-btn:hover .button-icon,
+.send-btn:hover .button-icon {
+    transform: none;
+}
+
+/* Fix source-select-btn hover */
+.source-select-btn:hover {
+    opacity: 0.9;
+}
+
+/* Fix refresh button hover */
+.refresh-btn:hover {
+    background-color: var(--accent-color);
+    opacity: 0.9;
+}
+
+/* Standardized button size for all sidebar and control buttons */
+.disconnect-btn, 
+.connect-btn,
+.settings-btn,
+.camera-btn,
+.screen-btn,
+.mic-btn,
+.send-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    position: relative;
+    background: rgba(60, 60, 75, 0.5) !important;
+    border: 1px solid rgba(100, 100, 130, 0.2) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    box-shadow: none !important;
+    color: var(--text-color);
+    transition: none;
+    cursor: pointer;
+    -webkit-app-region: no-drag;
+}
+
+/* Completely remove all hover effects */
+.disconnect-btn:hover,
+.connect-btn:hover,
+.settings-btn:hover,
+.camera-btn:hover,
+.screen-btn:hover,
+.mic-btn:hover,
+.send-btn:hover,
+button:hover {
+    background: rgba(60, 60, 75, 0.5) !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border-color: rgba(100, 100, 130, 0.2) !important;
+    opacity: 1 !important;
+}
+
+/* Remove active/focus states */
+.camera-btn.active,
+.screen-btn.active,
+.mic-btn.active,
+button:active,
+button:focus {
+    background: rgba(60, 60, 75, 0.5) !important;
+    box-shadow: none !important;
+    transform: none !important;
+    border-color: rgba(100, 100, 130, 0.2) !important;
+}
+
+/* Remove special hover styles for disconnect/connect buttons */
+.disconnect-btn,
+.disconnect-btn:hover {
+    background: rgba(60, 60, 75, 0.5) !important;
+    border-color: rgba(100, 100, 130, 0.2) !important;
+}
+
+.connect-btn,
+.connect-btn:hover {
+    background: rgba(60, 60, 75, 0.5) !important;
+    border-color: rgba(100, 100, 130, 0.2) !important;
+}
+
+/* Standardize preview buttons */
+.camera-preview-btn,
+.screen-preview-btn {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: none;
+    color: var(--text-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    padding: 0;
+    transition: none;
+}
+
+.camera-preview-btn:hover,
+.screen-preview-btn:hover {
+    color: var(--text-color);
+    transform: none;
+}
+
+/* Fix buttons that might still have transforms or effects */
+.sidebar-button:hover {
+    background: rgba(60, 60, 75, 0.4);
+    transform: none;
+}
+
+/* Remove any remaining hover effects on icons */
+.camera-btn:hover .button-icon,
+.screen-btn:hover .button-icon,
+.mic-btn:hover .button-icon,
+.settings-btn:hover .button-icon,
+.send-btn:hover .button-icon,
+.disconnect-btn:hover .button-icon,
+.connect-btn:hover .button-icon {
+    transform: none;
+    filter: brightness(0) invert(1);
+}
+
+/* Standardize icon sizes */
+.button-icon {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0) invert(1); /* Makes all SVGs white */
+    transition: none;
 }
