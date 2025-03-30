@@ -6,6 +6,9 @@ html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    will-change: backdrop-filter, background-color;
 }
 
 :root {
@@ -15,10 +18,10 @@ html, body {
     --text-color: #ffffff;
     --accent-color: hsl(197, 86%, 56%);
     --danger-color: #ff4444;
-    --semi-transparent-bg: rgba(0, 0, 0, 0.1);
+    --semi-transparent-bg: rgba(0, 0, 0, 0.2);
     --acrylic-bg: rgba(18, 18, 18, 0.3);
     --sidebar-width: 7%;
-    --purple-gradient-start: rgba(103, 58, 183, 0.15);
+    --purple-gradient-start: rgba(103, 58, 183, 0.1);
     --blue-gradient-end: rgba(33, 150, 243, 0.1);
     --app-height: 100vh;
     --accent-color-rgb: 76, 175, 80;
@@ -56,10 +59,11 @@ body {
         rgba(103, 58, 183, 0.05), 
         rgba(33, 150, 243, 0.02)) !important;
     background-color: transparent !important;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
     opacity: 0.95;
     overflow: hidden;
+    will-change: backdrop-filter, background-color;
 }
 
 /* Adjust for macOS title bar */
@@ -1437,8 +1441,10 @@ html.blurred {
     background-color: transparent !important;
     opacity: 0.95 !important;
     filter: none !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    will-change: backdrop-filter, background-color;
+    transition: none !important;
 }
 
 /* Ensure consistent backdrop filter for all UI components */
@@ -1479,4 +1485,45 @@ html.blurred {
     -webkit-backdrop-filter: blur(8px) !important;
     pointer-events: none;
     z-index: -1;
+}
+
+/* Add this new CSS rule at the bottom of the file to ensure backdrop filters remain active even when app loses focus */
+html:not(:focus-within), 
+body:not(:focus-within) {
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    background-color: transparent !important;
+    opacity: 0.95;
+}
+
+/* Add this new CSS rule to ensure consistent blur and transparency regardless of focus state */
+body,
+body:not(:focus-within),
+body:not(.focused),
+body.blurred,
+html,
+html:not(:focus-within),
+html:not(.focused),
+html.blurred {
+    background-color: transparent !important;
+    opacity: 0.95 !important;
+    filter: none !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    will-change: backdrop-filter, background-color;
+    transition: none !important;
+}
+
+/* Force backdrop filter to stay active even when window loses focus */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    z-index: -2;
+    pointer-events: none;
 }

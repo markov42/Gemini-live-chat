@@ -1,6 +1,14 @@
 const { app, BrowserWindow, ipcMain, desktopCapturer } = require('electron')
 const path = require('path')
 
+// Add these flags early in the app initialization
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('enable-transparent-visuals');
+app.commandLine.appendSwitch('force-high-performance-gpu');
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('enable-native-gpu-memory-buffers');
+app.disableHardwareAcceleration();
+
 let mainWindow; // Reference to the main window
 
 function createWindow () {
@@ -30,8 +38,15 @@ function createWindow () {
     
     // For macOS, disable automatic appearance change on blur
     if (process.platform === 'darwin') {
-        app.commandLine.appendSwitch('disable-renderer-backgrounding');
         mainWindow.setWindowButtonVisibility(true);
+        // Apply vibrancy effect for macOS
+        mainWindow.setVibrancy('ultra-dark');
+        
+        // Ensure vibrancy effect is maintained on blur
+        mainWindow.on('blur', () => {
+            // Reapply vibrancy immediately when window loses focus
+            mainWindow.setVibrancy('ultra-dark');
+        });
     }
 
     // Load the index.html file from the client folder
@@ -42,26 +57,32 @@ function createWindow () {
         // Force complete redraw with correct settings
         mainWindow.setBackgroundColor('#00000000');
         mainWindow.setOpacity(0.95);
-        // Wait for next tick to ensure changes take effect
-        setTimeout(() => {
-            if (mainWindow) {
-                // For macOS, force redraw by slightly moving the window
-                const bounds = mainWindow.getBounds();
-                bounds.width += 1;
-                mainWindow.setBounds(bounds);
-                bounds.width -= 1;
-                mainWindow.setBounds(bounds);
-                
-                // Force window to show with correct transparency
-                mainWindow.showInactive();
-            }
-        }, 10);
+        
+        // Reapply vibrancy on blur for macOS
+        if (process.platform === 'darwin') {
+            mainWindow.setVibrancy('ultra-dark');
+        }
+        
+        // Force a redraw using requestAnimationFrame instead of resizing
+        mainWindow.webContents.executeJavaScript(`
+            requestAnimationFrame(() => {
+                document.body.style.display = 'none';
+                requestAnimationFrame(() => {
+                    document.body.style.display = 'block';
+                });
+            });
+        `);
     });
     
     // Ensure focus state maintains same appearance
     mainWindow.on('focus', () => {
         mainWindow.setBackgroundColor('#00000000');
         mainWindow.setOpacity(0.95);
+        
+        // Ensure vibrancy is applied on focus for macOS
+        if (process.platform === 'darwin') {
+            mainWindow.setVibrancy('ultra-dark');
+        }
     });
 }
 
