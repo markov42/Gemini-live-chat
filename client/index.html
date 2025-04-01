@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; connect-src 'self' wss://generativelanguage.googleapis.com https://api.deepgram.com wss://api.deepgram.com; style-src 'self' 'unsafe-inline'; img-src 'self'">
+    <title>Gemini Live</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <!-- Sidebar Controls -->
+            <div class="sidebar-controls">
+                <button id="disconnectBtn" class="disconnect-btn" title="Disconnect">
+                    <img src="images/power.svg" alt="Disconnect" />
+                </button>
+                <button id="connectBtn" class="connect-btn" style="display: none;" title="Connect">
+                    <img src="images/power.svg" alt="Connect" />
+                </button>
+                <button id="cameraBtn" class="camera-btn" title="Toggle Camera">
+                    <img src="images/camera.svg" alt="Toggle Camera" />
+                </button>
+                <button id="screenBtn" class="screen-btn" title="Toggle Screen Share">
+                    <img src="images/monitor.svg" alt="Toggle Screen Share" />
+                </button>
+                <button id="micBtn" class="mic-btn" title="Toggle Microphone">
+                    <img src="images/mic.svg" alt="Toggle Microphone" />
+                </button>
+            </div>
+            
+            <!-- Bottom Section -->
+            <div class="sidebar-bottom">
+                <button id="settingsBtn" class="settings-btn" title="Settings">
+                    <img src="images/settings.svg" alt="Settings" />
+                </button>
+            </div>
+        </div>
+        
+        <div class="chat-area">
+            <div id="chatHistory" class="chat-history"></div>
+            <div id="cameraPreview" class="camera-preview"></div>
+            <div id="screenPreview" class="screen-preview"></div>
+            <div class="text-input-container">
+                <input type="text" id="messageInput" placeholder="Type your message..." class="text-input">
+                <button id="sendBtn" class="send-btn">
+                    <img src="images/send.svg" alt="Send" />
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="js/window-controls.js"></script>
+    <script type="module" src="js/script.js"></script>
+</body>
+</html>
