@@ -158,11 +158,38 @@ export class CameraManager {
             } 
             // Set deviceId constraint for desktop or when specific device is selected
             else if (videoDeviceId && videoDeviceId !== 'default') {
-                constraints.video.deviceId = { exact: videoDeviceId };
+                try {
+                    // Try to initialize with the exact device first
+                    constraints.video.deviceId = { exact: videoDeviceId };
+                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                } catch (deviceError) {
+                    console.warn('Selected camera device is unavailable:', deviceError.message);
+                    
+                    // If that fails, fall back to any available camera
+                    delete constraints.video.deviceId;
+                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    
+                    // Get device info to update localStorage with the new device
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const availableCameras = devices.filter(device => device.kind === 'videoinput');
+                    
+                    if (availableCameras.length > 0) {
+                        // Update localStorage to the first available camera
+                        localStorage.setItem('selectedVideoDeviceId', availableCameras[0].deviceId);
+                        console.info('Camera fallback: now using', availableCameras[0].label);
+                    } else {
+                        localStorage.setItem('selectedVideoDeviceId', 'default');
+                    }
+                }
+            } else {
+                // Default case - use whatever camera is available
+                this.stream = await navigator.mediaDevices.getUserMedia(constraints);
             }
 
-            // Request camera access
-            this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+            // If we don't have a stream yet (only happens if we didn't enter the deviceId error handling block)
+            if (!this.stream) {
+                this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+            }
 
             // Create and setup video element
             this.videoElement = document.createElement('video');

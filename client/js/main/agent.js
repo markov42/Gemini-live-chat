@@ -182,6 +182,28 @@ export class GeminiAgent{
         }
 
         try {
+            // Before initializing the camera, check if the selected device is available
+            const selectedDeviceId = localStorage.getItem('selectedVideoDeviceId');
+            
+            if (selectedDeviceId && selectedDeviceId !== 'default') {
+                try {
+                    // Get the list of available video devices
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                    
+                    // Check if the selected device is in the list
+                    const deviceExists = videoDevices.some(device => device.deviceId === selectedDeviceId);
+                    
+                    if (!deviceExists) {
+                        console.warn('Selected camera device is no longer available, using default camera instead');
+                        // Reset to default camera
+                        localStorage.setItem('selectedVideoDeviceId', 'default');
+                    }
+                } catch (error) {
+                    console.warn('Error checking camera availability:', error);
+                }
+            }
+            
             await this.cameraManager.initialize();
             
             // Set up interval to capture and send images
