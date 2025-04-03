@@ -81,9 +81,8 @@ geminiAgent.on('text_sent', (text) => {
 
 geminiAgent.on('interrupted', () => {
     chatManager.finalizeStreamingMessage();
-    if (!chatManager.lastUserMessageType) {
-        chatManager.addUserAudioMessage();
-    }
+    // Remove the automatic audio message creation that's causing the bug
+    // Only add audio messages when we're actually recording audio
 });
 
 geminiAgent.on('turn_complete', () => {
