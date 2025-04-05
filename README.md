@@ -31,7 +31,7 @@ Before diving in, ensure your system has:
 3. **Install dependencies**  
    Navigate to the project directory and install the required dependencies:
 
-   `cd gemini-2-live-electron`  
+   `cd gemini-live-chat`   
    `yarn install`
 
 4. **Start the application**  
