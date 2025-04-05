@@ -11,18 +11,49 @@ This Electron-based application serves as an innovative AI chatbox that enhances
 - **Simultaneous Inputs:** Users can have both the camera and microphone active, or the screen share and microphone, allowing for versatile interaction modes.
 - **Contextual Assistance:** The AI can analyze the user's screen content and provide relevant suggestions or solutions based on what it sees.
 
-## Getting Started
-To get started with the application, follow these steps:
-1. Clone the repository.
-2. Install the necessary dependencies.
-3. Run the application.
+## Prerequisites  
+Before diving in, ensure your system has:  
+- [Node.js](https://nodejs.org/) v18 or newer  
+- [Yarn](https://yarnpkg.com/) package manager  
+- Google AI Studio [API key](https://ai.google.dev/)  
+- Windows/macOS/Linux (64-bit)  
+
+## Quick Start
+
+1. **Get your API key**  
+   Sign up for access to the Google AI Studio and obtain your API key.
+
+2. **Clone the repository**  
+   To get the project on your local machine, run:
+
+   `git clone https://github.com/markov42/Gemini-live-chat`
+
+3. **Install dependencies**  
+   Navigate to the project directory and install the required dependencies:
+
+   `cd gemini-2-live-electron`  
+   `yarn install`
+
+4. **Start the application**  
+   Once the dependencies are installed, start the application with:
+
+   `yarn start`
+
+5. **For production build**  
+   To build the application for production, use one of the following commands based on your platform:
+
+   `yarn build:win`  *(For Windows)*  
+   `yarn build:mac`  *(For macOS)*  
+   `yarn build:linux`  *(For Linux)*
 
 ## Demo Video
-Check out our demo video showcasing the app's features and capabilities [here](#).
+Check out our demo video showcasing the app's features and capabilities here: [Demo Video Link]
 
 ## Contributing
-We welcome contributions! Please feel free to submit a pull request or open an issue to discuss improvements.
+We welcome contributions to make this project even better. If you have an idea or found a bug, feel free to:
+- Submit a pull request
+- Open an issue to discuss any improvements or changes
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the LICENSE file for more details.
 
