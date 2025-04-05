@@ -797,24 +797,83 @@ body.darwin {
 }
 
 /* Code Block Styling */
+.code-block-wrapper {
+    position: relative;
+    margin: 0.8em 0;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.code-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(40, 40, 60, 0.85);
+    padding: 6px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.code-language-indicator {
+    color: rgba(220, 220, 220, 0.8);
+    font-weight: 500;
+    text-transform: lowercase;
+}
+
+.copy-code-button {
+    background-color: rgba(80, 80, 100, 0.5);
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font-primary);
+    outline: none;
+}
+
+.copy-code-button:hover {
+    background-color: rgba(100, 100, 130, 0.6);
+    color: rgba(255, 255, 255, 1);
+}
+
+.copy-code-button:active {
+    transform: translateY(1px);
+}
+
 .code-block {
-    background-color: rgba(0, 0, 0, 0.15);
+    background-color: rgba(30, 30, 45, 0.6);
     backdrop-filter: blur(20px) brightness(1.1);
     -webkit-backdrop-filter: blur(20px) brightness(1.1);
-    border-radius: 6px;
     padding: 12px 15px;
-    margin: 0.8em 0;
+    margin: 0;
     overflow-x: auto;
     font-family: var(--font-mono);
     font-size: var(--font-size-code);
     line-height: var(--line-height-code);
     white-space: pre;
+    tab-size: 4;
+    -moz-tab-size: 4;
+    border: none;
+    border-radius: 0;
 }
 
 .code-block code {
     font-family: inherit;
     font-size: inherit;
     line-height: inherit;
+    display: block;
+    width: 100%;
+}
+
+/* Highlight.js overrides to better match our theme */
+.hljs {
+    background: transparent !important; 
+    padding: 0 !important;
 }
 
 /* Inline code styling */
@@ -823,7 +882,8 @@ body.darwin {
     font-size: var(--font-size-sm);
     padding: 0.2em 0.4em;
     border-radius: 4px;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(30, 30, 45, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Different language syntax colors with adjusted opacity for better contrast */
@@ -845,6 +905,10 @@ body.darwin {
 
 .language-json {
     color: rgba(255, 200, 140, 0.95);
+}
+
+.language-plaintext {
+    color: rgba(220, 220, 220, 0.95);
 }
 
 /* Headers within chat messages */

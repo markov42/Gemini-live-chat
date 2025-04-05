@@ -11,9 +11,23 @@ export class ChatManager {
         // Create a reference to this to use in the callback function
         const self = this;
         
-        // First, handle code blocks
-        text = text.replace(/```(.+?)\n([\s\S]+?)```/g, function(match, language, code) {
-            return `<pre class="code-block"><code class="language-${language}">${self.escapeHtml(code)}</code></pre>`;
+        // Process code blocks with language specification
+        text = text.replace(/```([a-zA-Z0-9_+-]*)\n([\s\S]+?)```/g, function(match, language, code) {
+            const displayLang = language || 'plaintext';
+            const langClass = language ? `language-${language}` : 'language-plaintext';
+            
+            return `<div class="code-block-wrapper">
+                <div class="code-block-header">
+                    <span class="code-language-indicator">${displayLang}</span>
+                    <button class="copy-code-button" title="Copy code">Copy</button>
+                </div>
+                <pre class="code-block"><code class="${langClass}">${self.escapeHtml(code)}</code></pre>
+            </div>`;
+        });
+        
+        // Handle inline code (single backtick)
+        text = text.replace(/`([^`]+)`/g, function(match, code) {
+            return `<code>${self.escapeHtml(code)}</code>`;
         });
         
         // Handle headers
@@ -46,14 +60,49 @@ export class ChatManager {
             text = text.replace(/(?:(?!<\/li>).)*(<li>.*<\/li>)(?:(?!<li>).)*/, '<ol>$1</ol>');
         }
         
-        // Handle paragraphs - only if not already in a list or code block
-        if (!hasOrderedList && !hasUnorderedList) {
-            text = text.replace(/\n\s*\n/g, '</p><p>');
-            text = '<p>' + text + '</p>';
-        }
+        // Improved paragraph handling:
+        // 1. Split the text into sections at double newlines
+        // 2. Process each section separately
+        // 3. Skip wrapping sections that are already wrapped in HTML tags
+        
+        // First, ensure consistent newlines for paragraph splitting
+        text = text.replace(/\n{3,}/g, '\n\n'); // Reduce more than 2 consecutive newlines to just 2
+        
+        // Split by double newlines and process each paragraph
+        const paragraphs = text.split(/\n\n+/);
+        text = paragraphs.map(para => {
+            para = para.trim();
+            if (!para) return '';
+            
+            // Skip wrapping if this is already HTML content
+            if (
+                /^<(\w+).*>.*<\/\1>$/s.test(para) || // Complete HTML tag
+                para.startsWith('<li>') ||
+                para.startsWith('<h') ||
+                para.startsWith('<ul') ||
+                para.startsWith('<ol') ||
+                para.startsWith('<div') ||
+                para.startsWith('<pre') ||
+                para.startsWith('<code')
+            ) {
+                return para;
+            }
+            
+            // Wrap in paragraph tags
+            return `<p>${para}</p>`;
+        }).join('\n\n');
+        
+        // No need for placeholder replacements anymore, as we're handling code directly
         
         // Clean up empty paragraphs
         text = text.replace(/<p><\/p>/g, '');
+        
+        // Add extra spacing between paragraphs and other block elements
+        text = text.replace(/(<\/p>)(<[ph])/g, '$1\n$2');
+        text = text.replace(/(<\/pre>)(<[ph])/g, '$1\n$2');
+        text = text.replace(/(<\/h\d>)(<[ph])/g, '$1\n$2');
+        text = text.replace(/(<div class="code-block-wrapper">)(<[ph])/g, '$1\n$2');
+        text = text.replace(/(<\/div>)(<[ph])/g, '$1\n$2');
         
         return text;
     }
@@ -109,10 +158,19 @@ export class ChatManager {
         if (!this.currentStreamingMessage) {
             this.startModelMessage();
         }
-        this.currentTranscript += ' ' + text;
+        
+        // Append new text while trimming leading/trailing spaces
+        this.currentTranscript += text;
+        
         try {
-            // Use our simple markdown formatter instead of marked
+            // Format the complete transcript each time
             this.currentStreamingMessage.innerHTML = this.formatMarkdown(this.currentTranscript);
+            
+            // Add event listeners to copy buttons
+            this.setupCopyButtons();
+            
+            // Apply syntax highlighting 
+            this.applySyntaxHighlighting();
         } catch (error) {
             console.error("Error formatting markdown:", error);
             // Fallback to plain text
@@ -121,9 +179,56 @@ export class ChatManager {
         this.scrollToBottom();
     }
 
+    // New function to setup copy button event listeners
+    setupCopyButtons() {
+        const copyButtons = this.currentStreamingMessage.querySelectorAll('.copy-code-button');
+        copyButtons.forEach(button => {
+            // Only add event listener if it doesn't already have one
+            if (!button.hasAttribute('data-listener-added')) {
+                button.addEventListener('click', () => {
+                    const codeBlock = button.closest('.code-block-wrapper').querySelector('code');
+                    const textToCopy = codeBlock.textContent;
+                    
+                    navigator.clipboard.writeText(textToCopy)
+                        .then(() => {
+                            // Change button text temporarily
+                            const originalText = button.textContent;
+                            button.textContent = 'Copied!';
+                            setTimeout(() => {
+                                button.textContent = originalText;
+                            }, 2000);
+                        })
+                        .catch(err => {
+                            console.error('Could not copy text: ', err);
+                        });
+                });
+                
+                // Mark button as having an event listener
+                button.setAttribute('data-listener-added', 'true');
+            }
+        });
+    }
+    
+    // New function to apply syntax highlighting
+    applySyntaxHighlighting() {
+        if (window.hljs) {
+            const codeBlocks = this.currentStreamingMessage.querySelectorAll('pre code');
+            codeBlocks.forEach(block => {
+                if (!block.classList.contains('hljs')) {
+                    window.hljs.highlightElement(block);
+                }
+            });
+        }
+    }
+
     finalizeStreamingMessage() {
         if (this.currentStreamingMessage) {
             this.currentStreamingMessage.classList.remove('streaming');
+            
+            // Final setup of copy buttons and syntax highlighting
+            this.setupCopyButtons();
+            this.applySyntaxHighlighting();
+            
             this.currentStreamingMessage = null;
             this.lastUserMessageType = null;
             this.currentTranscript = ''; // Reset transcript when finalizing
