@@ -8,8 +8,8 @@ This Electron-based application serves as an innovative AI chatbox that enhances
 - **Camera Input:** The AI can see the user through the camera, enabling personalized interactions and visual feedback.
 - **Microphone Support:** Users can communicate verbally with the AI, making the interaction more fluid and conversational.
 - **Screen Sharing:** The AI can view the user's screen in real-time, providing contextual assistance and troubleshooting help.
-- **Simultaneous Inputs:** Users can have both the camera and microphone active, or the screen share and microphone, allowing for versatile interaction modes.
-- **Contextual Assistance:** The AI can analyze the user's screen content and provide relevant suggestions or solutions based on what it sees.
+- **Simultaneous Inputs:** Mix and match inputs—use your camera and mic together, screen share with voice, or activate all three for a fully immersive experience.  
+- **Contextual Assistance:** The AI analyzes your screen content and delivers smart, relevant suggestions or solutions.  
 
 ## Prerequisites  
 Before diving in, ensure your system has:  
