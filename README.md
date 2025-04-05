@@ -47,7 +47,7 @@ Before diving in, ensure your system has:
    `yarn build:linux`  *(For Linux)*
 
 ## Demo Video
-Check out our demo video showcasing the app's features and capabilities here: [Demo Video Link]
+[Demo Video Link TBD]
 
 ## Contributing
 Contributions are welcomed. If you have an idea or found a bug, feel free to:
