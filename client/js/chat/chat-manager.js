@@ -21,13 +21,13 @@ export class ChatManager {
                     <span class="code-language-indicator">${displayLang}</span>
                     <button class="copy-code-button" title="Copy code">Copy</button>
                 </div>
-                <pre class="code-block"><code class="${langClass}">${self.escapeHtml(code)}</code></pre>
+                <pre class="code-block"><code class="${langClass}">${self.preserveCodeFormatting(code)}</code></pre>
             </div>`;
         });
         
         // Handle inline code (single backtick)
         text = text.replace(/`([^`]+)`/g, function(match, code) {
-            return `<code>${self.escapeHtml(code)}</code>`;
+            return `<code>${self.preserveCodeFormatting(code)}</code>`;
         });
         
         // Handle headers
@@ -46,19 +46,83 @@ export class ChatManager {
         // Handle links
         text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
         
-        // Handle unordered lists (*, -, +)
-        let hasUnorderedList = text.match(/^\s*[\*\-\+]\s+/gm);
-        if (hasUnorderedList) {
-            text = text.replace(/^\s*[\*\-\+]\s+(.*)/gm, '<li>$1</li>');
-            text = text.replace(/(?:(?!<\/li>).)*(<li>.*<\/li>)(?:(?!<li>).)*/, '<ul>$1</ul>');
+        // Improved list handling
+        // First, identify potential list groups by looking for consecutive list items
+        const listGroups = [];
+        let currentGroup = null;
+        
+        // Split text into lines to process lists
+        const lines = text.split('\n');
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            
+            // Check if this line is an unordered list item
+            const unorderedMatch = line.match(/^\s*([\*\-\+])\s+(.*)/);
+            if (unorderedMatch) {
+                const marker = unorderedMatch[1]; // The actual marker (*, -, +)
+                const content = unorderedMatch[2];
+                
+                if (!currentGroup || currentGroup.type !== 'ul') {
+                    // Start a new group
+                    currentGroup = { type: 'ul', items: [], startIndex: i, endIndex: i };
+                    listGroups.push(currentGroup);
+                } else {
+                    // Update the end index of the current group
+                    currentGroup.endIndex = i;
+                }
+                
+                // Store the item with its original marker
+                currentGroup.items.push({ marker, content });
+                continue;
+            }
+            
+            // Check if this line is an ordered list item (supports both 1. and 1) formats)
+            const orderedMatch = line.match(/^\s*(\d+)([\.\)])\s+(.*)/);
+            if (orderedMatch) {
+                const number = orderedMatch[1]; // The actual number
+                const delimiter = orderedMatch[2]; // . or )
+                const content = orderedMatch[3];
+                
+                if (!currentGroup || currentGroup.type !== 'ol') {
+                    // Start a new group
+                    currentGroup = { type: 'ol', items: [], startIndex: i, endIndex: i };
+                    listGroups.push(currentGroup);
+                } else {
+                    // Update the end index of the current group
+                    currentGroup.endIndex = i;
+                }
+                
+                // Store the item with its original number and delimiter
+                currentGroup.items.push({ number, delimiter, content });
+                continue;
+            }
+            
+            // If we get here and there's an empty line or non-list line, close the current group
+            if (currentGroup && (line.trim() === '' || !line.match(/^\s*[\*\-\+\d\.\)]/))) {
+                currentGroup = null;
+            }
         }
         
-        // Handle ordered lists (1., 2., etc) - only convert if it's actually a list
-        let hasOrderedList = text.match(/^\s*\d+\.\s+/gm);
-        if (hasOrderedList) {
-            text = text.replace(/^\s*\d+\.\s+(.*)/gm, '<li>$1</li>');
-            text = text.replace(/(?:(?!<\/li>).)*(<li>.*<\/li>)(?:(?!<li>).)*/, '<ol>$1</ol>');
+        // Now process each list group
+        for (const group of listGroups.reverse()) { // Process in reverse to not mess up indices
+            const listItems = group.items.map(item => {
+                if (group.type === 'ul') {
+                    // For unordered lists, include the marker in the content
+                    return `<li><span class="list-marker">${item.marker}</span> ${item.content}</li>`;
+                } else {
+                    // For ordered lists, include the number and delimiter in the content
+                    return `<li><span class="list-marker">${item.number}${item.delimiter}</span> ${item.content}</li>`;
+                }
+            }).join('');
+            
+            // Replace the original lines with the HTML list
+            const listHtml = `<${group.type}>${listItems}</${group.type}>`;
+            lines.splice(group.startIndex, group.endIndex - group.startIndex + 1, listHtml);
         }
+        
+        // Rejoin the lines
+        text = lines.join('\n');
         
         // Improved paragraph handling:
         // 1. Split the text into sections at double newlines
@@ -115,6 +179,13 @@ export class ChatManager {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
+    }
+
+    // New helper to preserve code indentation while escaping HTML
+    preserveCodeFormatting(code) {
+        return this.escapeHtml(code)
+            // Preserve leading spaces by replacing spaces with non-breaking spaces
+            .replace(/^ {2,}/gm, match => '&nbsp;'.repeat(match.length));
     }
 
     addUserMessage(text) {
@@ -219,6 +290,36 @@ export class ChatManager {
                 }
             });
         }
+        
+        // Check if code blocks are scrollable and add indicator
+        this.checkCodeBlocksScrollable();
+    }
+    
+    // New function to check if code blocks are scrollable
+    checkCodeBlocksScrollable() {
+        const codeBlocks = this.currentStreamingMessage.querySelectorAll('.code-block');
+        codeBlocks.forEach(block => {
+            // Remove existing indicators
+            block.classList.remove('scrollable-right');
+            
+            // Check if the block is scrollable (content width > visible width)
+            if (block.scrollWidth > block.clientWidth) {
+                block.classList.add('scrollable-right');
+                
+                // Add scroll event listener to update indicator
+                if (!block.hasAttribute('data-scroll-listener')) {
+                    block.addEventListener('scroll', () => {
+                        // If scrolled to the end, remove right indicator
+                        if (block.scrollLeft + block.clientWidth >= block.scrollWidth - 5) {
+                            block.classList.remove('scrollable-right');
+                        } else {
+                            block.classList.add('scrollable-right');
+                        }
+                    });
+                    block.setAttribute('data-scroll-listener', 'true');
+                }
+            }
+        });
     }
 
     finalizeStreamingMessage() {

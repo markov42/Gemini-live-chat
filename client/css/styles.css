@@ -123,6 +123,8 @@ body.darwin {
     min-height: 0; /* Allow flex child to shrink */
     position: relative;
     padding: 15px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Chat history with dynamic scrolling */
@@ -140,6 +142,9 @@ body.darwin {
     -webkit-backdrop-filter: blur(20px) brightness(1.1);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: auto;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* Text input container with fixed position */
@@ -746,6 +751,9 @@ body.darwin {
     -webkit-backdrop-filter: blur(20px) brightness(1.1);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    width: fit-content; /* Allow messages to shrink to content */
 }
 
 /* List styling in chat messages */
@@ -754,20 +762,29 @@ body.darwin {
     margin: 0.8em 0;
     padding-left: 1.5em;
     line-height: var(--line-height-base);
+    list-style-type: none; /* Remove default bullets/numbers */
 }
 
 .chat-message li {
     margin: 0.4em 0;
+    position: relative;
+}
+
+/* Style for list markers that will be included in the content */
+.chat-message .list-marker {
+    display: inline-block;
+    min-width: 1.2em;
+    margin-right: 0.3em;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Remove default list styling since we're including the markers in the content */
+.chat-message ul {
+    list-style-type: none;
 }
 
 .chat-message ol {
-    list-style-type: decimal;
-    list-style-position: outside;
-}
-
-.chat-message ul {
-    list-style-type: disc;
-    list-style-position: outside;
+    list-style-type: none;
 }
 
 .user-message {
@@ -804,6 +821,8 @@ body.darwin {
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    max-width: 100%; /* Ensure code blocks don't exceed message width */
+    box-sizing: border-box;
 }
 
 .code-block-header {
@@ -860,6 +879,25 @@ body.darwin {
     -moz-tab-size: 4;
     border: none;
     border-radius: 0;
+    width: 100%; /* Set width to 100% of container */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    position: relative; /* Needed for absolute positioning of scroll indicator */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.code-block::-webkit-scrollbar {
+    height: 6px;
+    background-color: transparent;
+}
+
+.code-block::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+}
+
+.code-block::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.4);
 }
 
 .code-block code {
@@ -918,10 +956,18 @@ body.darwin {
 .chat-message h4 { font-size: 1.1em; margin: 1em 0 0.5em; }
 .chat-message h5 { font-size: 1em; margin: 1em 0 0.5em; }
 
+/* Fix for code blocks in messages */
+.model-message .code-block-wrapper {
+    max-width: 100%; /* Limit code blocks to message width */
+    align-self: stretch; /* Make code blocks fill available width */
+    width: 100%; /* Take up full available width */
+}
+
 /* Ensure code doesn't overflow */
 .model-message pre {
     max-width: 100%;
     margin: 0;
+    overflow-x: auto; /* Enable horizontal scrolling */
 }
 
 .refresh-btn {
@@ -1273,4 +1319,67 @@ body.darwin {
 .source-selection-container,
 .settings-dialog {
     -webkit-app-region: no-drag;
+}
+
+/* Mobile-specific adjustments for code blocks */
+@media (max-width: 768px) {
+    .chat-message {
+        max-width: 85%; /* Slightly wider on mobile */
+    }
+    
+    .code-block {
+        font-size: calc(var(--font-size-code) - 1px); /* Slightly smaller font on mobile */
+    }
+    
+    .code-block-wrapper {
+        margin: 0.6em 0;
+    }
+}
+
+/* Extra narrow screens */
+@media (max-width: 500px) {
+    .chat-message {
+        max-width: 90%; /* Even wider on very narrow screens */
+    }
+    
+    .user-message {
+        margin-left: 5%; /* Less margin on narrow screens */
+    }
+    
+    .model-message {
+        margin-right: 5%; /* Less margin on narrow screens */
+    }
+    
+    .code-block {
+        padding: 10px 12px; /* Smaller padding */
+    }
+    
+    .code-block-header {
+        padding: 4px 8px; /* Smaller padding */
+        font-size: 11px; /* Smaller font */
+    }
+    
+    .copy-code-button {
+        padding: 2px 6px;
+        font-size: 10px;
+    }
+}
+
+/* Code block scroll indicator */
+.code-block.scrollable-right::after {
+    content: '→';
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 18px;
+    pointer-events: none;
+    animation: pulse 1.5s infinite;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 0.3; }
 }
