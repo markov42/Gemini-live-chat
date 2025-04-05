@@ -50,7 +50,7 @@ Before diving in, ensure your system has:
 Check out our demo video showcasing the app's features and capabilities here: [Demo Video Link]
 
 ## Contributing
-We welcome contributions to make this project even better. If you have an idea or found a bug, feel free to:
+Contributions are welcomed. If you have an idea or found a bug, feel free to:
 - Submit a pull request
 - Open an issue to discuss any improvements or changes
 
