@@ -16,6 +16,11 @@ export class ChatManager {
             const displayLang = language || 'plaintext';
             const langClass = language ? `language-${language}` : 'language-plaintext';
             
+            // Validate and fix code if it's a programming language
+            if (language && ['javascript', 'python', 'java', 'c', 'cpp', 'csharp', 'php', 'ruby', 'go', 'typescript', 'swift'].includes(language.toLowerCase())) {
+                code = self.validateCodeBlock(code, language.toLowerCase());
+            }
+            
             return `<div class="code-block-wrapper">
                 <div class="code-block-header">
                     <span class="code-language-indicator">${displayLang}</span>
@@ -174,6 +179,398 @@ export class ChatManager {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
+    }
+
+    // New method to validate and fix common code issues
+    validateCodeBlock(code, language) {
+        try {
+            // Store original code in case validation fails
+            const originalCode = code;
+            
+            // Common fixes for all languages
+            let fixedCode = code.trim();
+            const diagnostics = []; // For tracking changes made
+            
+            // 1. Variable name consistency check and reference correction
+            const variableMap = new Map();
+            const similarVariables = new Map(); // Map of normalized names to actual variable names
+            
+            // Collect all variable declarations and their usages
+            const varPattern = language === 'python' ? 
+                /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*=(?!=)/g : 
+                /\b(var|let|const)\s+([a-zA-Z_][a-zA-Z0-9_]*)\b/g;
+            
+            // Find variables with similar names (snake_case vs camelCase inconsistencies)
+            const allVariables = new Set();
+            let match;
+            
+            if (language === 'python') {
+                // Handle Python variable declarations
+                while ((match = varPattern.exec(fixedCode)) !== null) {
+                    allVariables.add(match[1]);
+                }
+                
+                // Handle function parameters in Python
+                const pythonFuncRegex = /\s*def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(([^)]*)\):/g;
+                while ((match = pythonFuncRegex.exec(fixedCode)) !== null) {
+                    const funcName = match[1];
+                    const params = match[2].split(',');
+                    
+                    for (let param of params) {
+                        param = param.trim();
+                        if (param.includes('=')) {
+                            // Handle default parameters
+                            param = param.split('=')[0].trim();
+                        }
+                        if (param) allVariables.add(param);
+                    }
+                }
+            } else {
+                // Handle JavaScript/TypeScript variable declarations
+                const jsVarRegex = /\b(?:var|let|const)\s+([a-zA-Z_][a-zA-Z0-9_]*)\b/g;
+                while ((match = jsVarRegex.exec(fixedCode)) !== null) {
+                    allVariables.add(match[1]);
+                }
+                
+                // Also catch function parameters in JS/TS
+                const functionParamRegex = /\bfunction\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(([^)]*)\)/g;
+                while ((match = functionParamRegex.exec(fixedCode)) !== null) {
+                    const funcName = match[1];
+                    const params = match[2].split(',');
+                    
+                    for (const param of params) {
+                        const trimmed = param.trim();
+                        if (trimmed) allVariables.add(trimmed);
+                    }
+                }
+                
+                // Arrow functions
+                const arrowFuncRegex = /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*=>\s*{/g;
+                while ((match = arrowFuncRegex.exec(fixedCode)) !== null) {
+                    allVariables.add(match[1]);
+                }
+                
+                // Class methods
+                const classMethodRegex = /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*\([^)]*\)\s*{/g;
+                while ((match = classMethodRegex.exec(fixedCode)) !== null) {
+                    allVariables.add(match[1]);
+                }
+            }
+            
+            // Group similar variables by normalized name
+            for (const varName of allVariables) {
+                // Normalize: remove underscores and convert to lowercase
+                const normalized = varName.replace(/_/g, '').toLowerCase();
+                
+                if (!similarVariables.has(normalized)) {
+                    similarVariables.set(normalized, []);
+                }
+                similarVariables.get(normalized).push(varName);
+            }
+            
+            // For each group of similar variables, standardize to the first occurrence
+            for (const [normalized, variants] of similarVariables.entries()) {
+                if (variants.length > 1) {
+                    const standardName = variants[0]; // First occurrence becomes the standard
+                    
+                    // Replace all other variants with the standard name
+                    for (let i = 1; i < variants.length; i++) {
+                        const beforeFix = fixedCode;
+                        const variantRegex = new RegExp(`\\b${variants[i]}\\b`, 'g');
+                        fixedCode = fixedCode.replace(variantRegex, standardName);
+                        
+                        if (beforeFix !== fixedCode) {
+                            diagnostics.push(`Renamed variable: ${variants[i]} → ${standardName}`);
+                        }
+                    }
+                }
+            }
+            
+            // 2. Check function scope and return statements
+            if (language === 'javascript' || language === 'typescript') {
+                // Check for return statements outside function scope
+                const functionBlocks = [];
+                let depth = 0;
+                let inFunction = false;
+                let functionStartIndex = -1;
+                let currentFunctionName = '';
+                
+                const lines = fixedCode.split('\n');
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    
+                    // Check for function declarations
+                    const funcMatch = line.match(/\bfunction\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\([^)]*\)\s*\{/);
+                    if (funcMatch) {
+                        if (!inFunction) {
+                            inFunction = true;
+                            functionStartIndex = i;
+                            currentFunctionName = funcMatch[1];
+                        }
+                        depth++;
+                    }
+                    
+                    // Count opening braces
+                    const openBraces = (line.match(/\{/g) || []).length;
+                    depth += openBraces;
+                    
+                    // Count closing braces
+                    const closeBraces = (line.match(/\}/g) || []).length;
+                    depth -= closeBraces;
+                    
+                    // If we're back to depth 0 and were in a function, record the function block
+                    if (depth === 0 && inFunction) {
+                        functionBlocks.push({
+                            name: currentFunctionName,
+                            start: functionStartIndex,
+                            end: i
+                        });
+                        inFunction = false;
+                        currentFunctionName = '';
+                    }
+                }
+                
+                // Check for return statements outside function blocks
+                for (let i = 0; i < lines.length; i++) {
+                    if (/^\s*return\s/.test(lines[i])) {
+                        let insideFunction = false;
+                        let containingFunction = null;
+                        
+                        for (const block of functionBlocks) {
+                            if (i >= block.start && i <= block.end) {
+                                insideFunction = true;
+                                containingFunction = block;
+                                break;
+                            }
+                        }
+                        
+                        if (!insideFunction) {
+                            // This return is outside a function - try to find the nearest function to move it into
+                            let nearestFunction = null;
+                            let minDistance = Infinity;
+                            
+                            for (const block of functionBlocks) {
+                                const distance = Math.min(
+                                    Math.abs(i - block.start),
+                                    Math.abs(i - block.end)
+                                );
+                                
+                                if (distance < minDistance) {
+                                    minDistance = distance;
+                                    nearestFunction = block;
+                                }
+                            }
+                            
+                            if (nearestFunction) {
+                                // Move the return statement inside the function, right before it ends
+                                const returnLine = lines[i];
+                                lines.splice(i, 1); // Remove the original return
+                                lines.splice(nearestFunction.end, 0, returnLine); // Add before function end
+                                
+                                diagnostics.push(`Moved return statement into function: ${nearestFunction.name}`);
+                                
+                                // Update indices since we moved lines
+                                if (i < nearestFunction.end) {
+                                    nearestFunction.end--;
+                                }
+                                i--; // Reprocess the current line index since we removed a line
+                            }
+                        }
+                    }
+                }
+                
+                fixedCode = lines.join('\n');
+            } else if (language === 'python') {
+                // Python-specific validations
+                const lines = fixedCode.split('\n');
+                
+                // Track function definitions and their indentation
+                const functionBlocks = [];
+                let currentFunction = null;
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    const indentation = line.match(/^\s*/)[0].length;
+                    
+                    // Check for function definitions
+                    const defMatch = line.match(/^\s*def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/);
+                    if (defMatch) {
+                        currentFunction = {
+                            name: defMatch[1],
+                            startLine: i,
+                            indentation: indentation,
+                            endLine: null
+                        };
+                        functionBlocks.push(currentFunction);
+                    } 
+                    // If line is less indented than the current function, we've exited the function
+                    else if (currentFunction && indentation <= currentFunction.indentation && line.trim() !== '') {
+                        currentFunction.endLine = i - 1;
+                        currentFunction = null;
+                    }
+                }
+                
+                // Set end line for any function that reaches the end of the file
+                if (currentFunction && currentFunction.endLine === null) {
+                    currentFunction.endLine = lines.length - 1;
+                }
+                
+                // Check for return statements outside function scope
+                for (let i = 0; i < lines.length; i++) {
+                    if (/^\s*return\s/.test(lines[i])) {
+                        let insideFunction = false;
+                        let containingFunction = null;
+                        
+                        for (const func of functionBlocks) {
+                            if (i >= func.startLine && (func.endLine === null || i <= func.endLine)) {
+                                insideFunction = true;
+                                containingFunction = func;
+                                break;
+                            }
+                        }
+                        
+                        if (!insideFunction) {
+                            // This return is outside a function - try to find the nearest function to move it into
+                            let nearestFunction = null;
+                            let minDistance = Infinity;
+                            
+                            for (const func of functionBlocks) {
+                                const distance = Math.min(
+                                    Math.abs(i - func.startLine),
+                                    func.endLine ? Math.abs(i - func.endLine) : Infinity
+                                );
+                                
+                                if (distance < minDistance) {
+                                    minDistance = distance;
+                                    nearestFunction = func;
+                                }
+                            }
+                            
+                            if (nearestFunction) {
+                                // Move the return statement inside the function, properly indented
+                                const returnLine = lines[i];
+                                lines.splice(i, 1); // Remove the original return
+                                
+                                // Calculate proper indentation for the return statement
+                                const properIndentation = ' '.repeat(nearestFunction.indentation + 4);
+                                const indentedReturn = properIndentation + returnLine.trim();
+                                
+                                // Insert at the end of the function
+                                lines.splice(nearestFunction.endLine, 0, indentedReturn);
+                                
+                                diagnostics.push(`Moved return statement into function: ${nearestFunction.name}`);
+                                
+                                // Update indices since we moved lines
+                                if (i < nearestFunction.endLine) {
+                                    nearestFunction.endLine--;
+                                }
+                                i--; // Reprocess the current line index since we removed a line
+                            }
+                        }
+                    }
+                }
+                
+                fixedCode = lines.join('\n');
+            }
+            
+            // 3. Check for incomplete code blocks and add missing closing brackets/braces
+            if (language === 'javascript' || language === 'typescript') {
+                const openBraces = (fixedCode.match(/\{/g) || []).length;
+                const closeBraces = (fixedCode.match(/\}/g) || []).length;
+                
+                if (openBraces > closeBraces) {
+                    // Add missing closing braces
+                    fixedCode += '\n' + '}'.repeat(openBraces - closeBraces);
+                    diagnostics.push(`Added ${openBraces - closeBraces} missing closing braces`);
+                }
+            } else if (language === 'python') {
+                // For Python, we rely on indentation which is harder to fix automatically
+                // But we can check for common syntax issues
+                if (fixedCode.includes('else:') && !fixedCode.includes('if ')) {
+                    // 'else' without 'if' - try to add a basic if condition
+                    fixedCode = fixedCode.replace(/else:/g, 'if True:\n    pass\nelse:');
+                    diagnostics.push('Added missing if statement before else');
+                }
+            }
+            
+            // 4. Fix common syntax issues with variable access and function calls
+            if (language === 'javascript' || language === 'typescript') {
+                // Fix missing this references in class methods
+                const lines = fixedCode.split('\n');
+                let inClass = false;
+                let classIndentation = 0;
+                let classMembers = new Set();
+                
+                // First pass: collect class members
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    
+                    if (line.startsWith('class ') && line.includes('{')) {
+                        inClass = true;
+                        classIndentation = lines[i].match(/^\s*/)[0].length;
+                        classMembers.clear();
+                    } else if (inClass) {
+                        const currentIndentation = lines[i].match(/^\s*/)[0].length;
+                        if (currentIndentation <= classIndentation && line.length > 0) {
+                            inClass = false;
+                        } else {
+                            // Check for method or property definition
+                            const memberMatch = line.match(/^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*[\(=]/);
+                            if (memberMatch) {
+                                classMembers.add(memberMatch[1]);
+                            }
+                        }
+                    }
+                }
+                
+                // Second pass: fix missing this references
+                inClass = false;
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    
+                    if (line.startsWith('class ') && line.includes('{')) {
+                        inClass = true;
+                        classIndentation = lines[i].match(/^\s*/)[0].length;
+                    } else if (inClass) {
+                        const currentIndentation = lines[i].match(/^\s*/)[0].length;
+                        if (currentIndentation <= classIndentation && line.length > 0) {
+                            inClass = false;
+                        } else {
+                            // Check if line uses class members without 'this.'
+                            for (const member of classMembers) {
+                                // Exclude the line if it's defining the member
+                                if (!line.includes(`${member} =`) && !line.includes(`${member}(`)) {
+                                    const beforeFix = lines[i];
+                                    // Add 'this.' before member references, avoiding adding to string literals
+                                    lines[i] = lines[i].replace(
+                                        new RegExp(`\\b${member}\\b(?![\\s]*[:=\\(])`, 'g'), 
+                                        `this.${member}`
+                                    );
+                                    
+                                    if (beforeFix !== lines[i]) {
+                                        diagnostics.push(`Added missing 'this.' reference to ${member}`);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                fixedCode = lines.join('\n');
+            }
+            
+            // If we made changes and diagnostics are enabled, log them
+            if (fixedCode !== originalCode && diagnostics.length > 0) {
+                console.log('Code validation fixed issues:', diagnostics);
+            }
+            
+            // Return the fixed code
+            return fixedCode;
+        } catch (e) {
+            console.warn('Code validation error:', e);
+            // If something goes wrong, return the original code
+            return code;
+        }
     }
 
     // New helper to preserve code indentation while escaping HTML

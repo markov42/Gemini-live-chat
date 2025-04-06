@@ -5,6 +5,24 @@ export const settingsTemplate = `
 </div>
 
 <div class="settings-group">
+    <label for="modelSelection">AI Model</label>
+    <select id="modelSelection">
+        <option value="models/gemini-2.0-flash-exp">Gemini 2.0 Flash (Streaming, Audio & Video)</option>
+        <option value="models/gemini-2.5-pro-preview-03-25">Gemini 2.5 Pro (Best for Coding)</option>
+        <option value="models/gemini-1.5-pro">Gemini 1.5 Pro (Reasoning)</option>
+        <option value="models/gemini-1.5-flash">Gemini 1.5 Flash (Fast Responses)</option>
+    </select>
+    <div class="settings-note">
+        Note: Only Gemini 2.0 Flash supports streaming audio and video features. Other models will use text-only mode.
+    </div>
+</div>
+
+<div class="settings-group">
+    <label for="systemInstructions">System Instructions</label>
+    <textarea id="systemInstructions" placeholder="Enter custom instructions for the AI (e.g., 'You are a helpful assistant')" rows="4"></textarea>
+</div>
+
+<div class="settings-group">
     <label for="deepgramApiKey">Deepgram API Key (Optional)</label>
     <input type="password" id="deepgramApiKey" placeholder="Enter your Deepgram API key">
 </div>

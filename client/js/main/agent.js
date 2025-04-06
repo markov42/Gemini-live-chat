@@ -4,6 +4,8 @@
  * and coordinates the overall application functionality.
  */
 import { GeminiWebsocketClient } from '../ws/client.js';
+import { GeminiRestClient } from '../ws/rest-client.js';
+import { isStreamingModel, getRestApiUrl } from '../config/config.js';
 
 import { AudioRecorder } from '../audio/recorder.js';
 import { AudioStreamer } from '../audio/streamer.js';
@@ -80,6 +82,9 @@ export class GeminiAgent{
         this.name = name;
         this.url = url;
         this.client = null;
+        
+        // Store if this is a streaming model
+        this.isStreaming = isStreamingModel(config.model);
     }
 
     setupEventListeners() {
@@ -88,47 +93,50 @@ export class GeminiAgent{
             this.emit('text', text);
         });
     
-        // Handle incoming audio data from the model
-        this.client.on('audio', async (data) => {
-            try {
-                if (!this.audioStreamer.isInitialized) {
-                    this.audioStreamer.initialize();
-                }
-                this.audioStreamer.streamAudio(new Uint8Array(data));
-
-                // Only connect to model transcriber if we need transcription and it's not already connected
-                if (this.modelTranscriber && this.transcribeModelsSpeech) {
-                    if (!this.modelTranscriber.isConnected) {
-                        console.log("Connecting model transcriber to process received audio");
-                        try {
-                            await this.modelTranscriber.connect();
-                        } catch (e) {
-                            console.error("Failed to connect model transcriber:", e);
+        // Only set up audio-related events for streaming models
+        if (this.isStreaming) {
+            // Handle incoming audio data from the model
+            this.client.on('audio', async (data) => {
+                try {
+                    if (!this.audioStreamer.isInitialized) {
+                        this.audioStreamer.initialize();
+                    }
+                    this.audioStreamer.streamAudio(new Uint8Array(data));
+    
+                    // Only connect to model transcriber if we need transcription and it's not already connected
+                    if (this.modelTranscriber && this.transcribeModelsSpeech) {
+                        if (!this.modelTranscriber.isConnected) {
+                            console.log("Connecting model transcriber to process received audio");
+                            try {
+                                await this.modelTranscriber.connect();
+                            } catch (e) {
+                                console.error("Failed to connect model transcriber:", e);
+                            }
+                        }
+                        
+                        if (this.modelTranscriber.isConnected) {
+                            this.modelTranscriber.sendAudio(data);
                         }
                     }
-                    
-                    if (this.modelTranscriber.isConnected) {
-                        this.modelTranscriber.sendAudio(data);
-                    }
+    
+                } catch (error) {
+                    throw new Error('Audio processing error:' + error);
                 }
-
-            } catch (error) {
-                throw new Error('Audio processing error:' + error);
-            }
-        });
-
-        // Handle model interruptions by stopping audio playback
-        this.client.on('interrupted', () => {
-            this.audioStreamer.stop();
-            this.audioStreamer.isInitialized = false;
-            this.emit('interrupted');
-            
-            // Disconnect the model transcriber when audio is interrupted to save resources
-            if (this.modelTranscriber && this.modelTranscriber.isConnected) {
-                console.log("Disconnecting model transcriber after audio interruption");
-                this.modelTranscriber.disconnect();
-            }
-        });
+            });
+    
+            // Handle model interruptions by stopping audio playback
+            this.client.on('interrupted', () => {
+                this.audioStreamer.stop();
+                this.audioStreamer.isInitialized = false;
+                this.emit('interrupted');
+                
+                // Disconnect the model transcriber when audio is interrupted to save resources
+                if (this.modelTranscriber && this.modelTranscriber.isConnected) {
+                    console.log("Disconnecting model transcriber after audio interruption");
+                    this.modelTranscriber.disconnect();
+                }
+            });
+        }
 
         // Add an event handler when the model finishes speaking if needed
         this.client.on('turn_complete', () => {
@@ -136,15 +144,18 @@ export class GeminiAgent{
             this.emit('turn_complete');
             
             // Disconnect the model transcriber when audio is complete to save resources
-            if (this.modelTranscriber && this.modelTranscriber.isConnected) {
+            if (this.isStreaming && this.modelTranscriber && this.modelTranscriber.isConnected) {
                 console.log("Disconnecting model transcriber after turn completion");
                 this.modelTranscriber.disconnect();
             }
         });
 
-        this.client.on('tool_call', async (toolCall) => {
-            await this.handleToolCall(toolCall);
-        });
+        // Only set up tool call events for streaming models
+        if (this.isStreaming) {
+            this.client.on('tool_call', async (toolCall) => {
+                await this.handleToolCall(toolCall);
+            });
+        }
     }
         
     // TODO: Handle multiple function calls
@@ -155,10 +166,19 @@ export class GeminiAgent{
     }
 
     /**
-     * Connects to the Gemini API using the GeminiWebsocketClient.connect() method.
+     * Connects to the Gemini API using the appropriate client.
      */
     async connect() {
-        this.client = new GeminiWebsocketClient(this.name, this.url, this.config);
+        // Use the appropriate client based on whether this is a streaming model
+        if (this.isStreaming) {
+            console.log("Using WebSocket client for streaming model: " + this.config.model);
+            this.client = new GeminiWebsocketClient(this.name, this.url, this.config);
+        } else {
+            console.log("Using REST API client for non-streaming model: " + this.config.model);
+            const restApiUrl = getRestApiUrl(this.config.model);
+            this.client = new GeminiRestClient(this.name, restApiUrl, this.config);
+        }
+        
         await this.client.connect();
         this.setupEventListeners();
         this.connected = true;
@@ -177,6 +197,13 @@ export class GeminiAgent{
      * Starts camera capture and sends images at regular intervals
      */
     async startCameraCapture() {
+        // Only streaming models support camera input
+        if (!this.isStreaming) {
+            console.warn("Camera capture is only supported with streaming models.");
+            this.emit('text', "Camera input is only available with the Gemini 2.0 Flash model. Please switch models in settings if you need this feature.");
+            return;
+        }
+        
         if (!this.connected) {
             throw new Error('Must be connected to start camera capture');
         }
@@ -199,40 +226,33 @@ export class GeminiAgent{
                         // Reset to default camera
                         localStorage.setItem('selectedVideoDeviceId', 'default');
                     }
-                } catch (error) {
-                    console.warn('Error checking camera availability:', error);
+                } catch (err) {
+                    console.error('Error checking camera devices:', err);
                 }
             }
             
-            await this.cameraManager.initialize();
+            // Initialize camera with the video device ID from settings
+            await this.cameraManager.initialize(localStorage.getItem('selectedVideoDeviceId') || 'default');
+            console.info('Camera initialized');
             
-            // Set up interval to capture and send images
+            // Create interval to capture and send frames
             this.cameraInterval = setInterval(async () => {
-                const imageBase64 = await this.cameraManager.capture();
-                this.client.sendImage(imageBase64);                
+                try {
+                    const imageData = await this.cameraManager.captureFrame();
+                    if (imageData) {
+                        await this.client.sendImage(imageData);
+                    }
+                } catch (error) {
+                    console.error('Error capturing/sending image:', error);
+                }
             }, this.captureInterval);
             
-            console.info('Camera capture started');
+            // Return a reference to the video element for display
+            return this.cameraManager.getVideoElement();
         } catch (error) {
-            await this.disconnect();
-            throw new Error('Failed to start camera capture: ' + error);
+            console.error('Failed to start camera capture:', error);
+            throw error;
         }
-    }
-
-    /**
-     * Stops camera capture and cleans up resources
-     */
-    async stopCameraCapture() {
-        if (this.cameraInterval) {
-            clearInterval(this.cameraInterval);
-            this.cameraInterval = null;
-        }
-        
-        if (this.cameraManager) {
-            this.cameraManager.dispose();
-        }
-        
-        console.info('Camera capture stopped');
     }
 
     /**

@@ -26,6 +26,8 @@ class SettingsManager {
             dialog: this.dialog,
             overlay: this.overlay,
             apiKeyInput: this.dialog.querySelector('#apiKey'),
+            modelSelection: this.dialog.querySelector('#modelSelection'),
+            systemInstructions: this.dialog.querySelector('#systemInstructions'),
             deepgramApiKeyInput: this.dialog.querySelector('#deepgramApiKey'),
             deviceToggle: this.dialog.querySelector('#deviceToggle'),
             deviceContent: this.dialog.querySelector('#deviceToggle + .collapsible-content'),
@@ -105,9 +107,15 @@ class SettingsManager {
     }
 
     loadSettings() {
-        // Load values from localStorage - only keep the ones we need
+        // Load values from localStorage
         this.elements.apiKeyInput.value = localStorage.getItem('apiKey') || '';
         this.elements.deepgramApiKeyInput.value = localStorage.getItem('deepgramApiKey') || '';
+        
+        // Load model selection and system instructions
+        const selectedModel = localStorage.getItem('selectedModel') || 'models/gemini-2.0-flash-exp';
+        this.elements.modelSelection.value = selectedModel;
+        
+        this.elements.systemInstructions.value = localStorage.getItem('systemInstructions');
     }
 
     saveSettings() {
@@ -117,6 +125,10 @@ class SettingsManager {
         // Save selected device IDs
         localStorage.setItem('selectedAudioDeviceId', this.elements.audioInputSelect.value);
         localStorage.setItem('selectedVideoDeviceId', this.elements.videoInputSelect.value);
+        
+        // Save model selection and system instructions
+        localStorage.setItem('selectedModel', this.elements.modelSelection.value);
+        localStorage.setItem('systemInstructions', this.elements.systemInstructions.value);
     }
 
     toggleCollapsible(toggle, content) {

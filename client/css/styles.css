@@ -698,16 +698,47 @@ body.darwin {
 }
 
 .settings-group select,
-.settings-group input {
+.settings-group input[type="password"] {
     width: 100%;
-    padding: 8px;
-    background-color: rgba(30, 30, 60, 0.2);
-    backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-backdrop-filter: blur(20px) brightness(1.1);
-    -webkit-app-region: no-drag;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 8px 10px;
+    background-color: rgba(30, 30, 60, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 4px;
-    color: var(--text-color);
+    color: #fff;
+    font-size: 14px;
+    margin-top: 4px;
+    transition: border-color 0.3s, background-color 0.3s;
+}
+
+.settings-group textarea {
+    width: 100%;
+    padding: 8px 10px;
+    background-color: rgba(30, 30, 60, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    margin-top: 4px;
+    min-height: 80px;
+    resize: vertical;
+    transition: border-color 0.3s, background-color 0.3s;
+    font-family: inherit;
+    line-height: 1.4;
+}
+
+.settings-group select:hover,
+.settings-group input[type="password"]:hover,
+.settings-group textarea:hover {
+    background-color: rgba(40, 40, 80, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.settings-group select:focus,
+.settings-group input[type="password"]:focus,
+.settings-group textarea:focus {
+    outline: none;
+    border-color: rgba(100, 100, 255, 0.6);
+    background-color: rgba(40, 40, 80, 0.5);
 }
 
 .collapsible {
@@ -1439,4 +1470,11 @@ body.darwin {
 
 .chat-message .code-block-wrapper {
     margin: 0.6em 0;
+}
+
+.settings-note {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 4px;
+    font-style: italic;
 }
