@@ -1124,6 +1124,15 @@ body.darwin {
 /* Add a button to the screen preview header to select source */
 .source-select-btn {
     margin-right: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.source-select-btn img {
+    width: 14px;
+    height: 14px;
+    stroke: var(--text-color);
 }
 
 /* Context menu for screen button with grid-aware positioning */

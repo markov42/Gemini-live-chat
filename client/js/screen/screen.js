@@ -76,7 +76,13 @@ export class ScreenManager {
             header.innerHTML = `
                 <span class="screen-preview-title">Screen Share</span>
                 <div class="screen-preview-controls">
-                    <button class="screen-preview-btn source-select-btn" title="Change Source">📺</button>
+                    <button class="screen-preview-btn source-select-btn" title="Change Source">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
                     <button class="screen-preview-btn minimize-btn" title="Minimize">_</button>
                 </div>
             `;
@@ -93,7 +99,11 @@ export class ScreenManager {
             const sourceSelectBtn = header.querySelector('.source-select-btn');
             sourceSelectBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.showSourceSelectionDialog();
+                this.showSourceSelectionDialog().then(selectedSourceId => {
+                    if (selectedSourceId) {
+                        this.changeSource(selectedSourceId);
+                    }
+                });
             });
         }
 
@@ -241,16 +251,65 @@ export class ScreenManager {
         if (!sourceId) return false;
         
         try {
+            console.log(`Changing screen share source to: ${sourceId}`);
+            
             // If already initialized, dispose of current stream
             if (this.isInitialized) {
-                await this.dispose();
+                // Stop the current video tracks
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                }
+                
+                // Clear video element source but keep other resources
+                if (this.videoElement) {
+                    this.videoElement.srcObject = null;
+                }
             }
             
             // Store the selected source ID
             this.selectedSourceId = sourceId;
             
-            // Initialize with the selected source
-            await this.initialize(sourceId);
+            // Find the selected source to use
+            const source = this.sources.find(s => s.id === sourceId);
+            if (!source) {
+                throw new Error('Selected screen source not found');
+            }
+
+            // Request screen sharing using the new source ID
+            this.stream = await navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: {
+                    mandatory: {
+                        chromeMediaSource: 'desktop',
+                        chromeMediaSourceId: source.id,
+                        minWidth: 1280,
+                        maxWidth: 4096,
+                        minHeight: 720,
+                        maxHeight: 2160
+                    }
+                }
+            });
+
+            // Update video element with new stream
+            if (this.videoElement) {
+                this.videoElement.srcObject = this.stream;
+                await this.videoElement.play();
+            } else {
+                // If no video element exists, we need to do a full initialization
+                await this.initialize(sourceId);
+                return true;
+            }
+            
+            // Listen for the end of screen sharing
+            this.stream.getVideoTracks()[0].addEventListener('ended', () => {
+                this.dispose();
+                // Notify parent component that sharing has stopped
+                if (this.config.onStop) {
+                    this.config.onStop();
+                }
+            });
+
+            console.log('Screen share source changed successfully');
             return true;
         } catch (error) {
             console.error('Failed to change screen source:', error);
