@@ -125,14 +125,10 @@ export class ChatManager {
         text = lines.join('\n');
         
         // Improved paragraph handling:
-        // 1. Split the text into sections at double newlines
-        // 2. Process each section separately
-        // 3. Skip wrapping sections that are already wrapped in HTML tags
-        
-        // First, ensure consistent newlines for paragraph splitting
+        // 1. Normalize all newlines to make paragraph detection consistent
         text = text.replace(/\n{3,}/g, '\n\n'); // Reduce more than 2 consecutive newlines to just 2
         
-        // Split by double newlines and process each paragraph
+        // 2. Split by double newlines and process each paragraph
         const paragraphs = text.split(/\n\n+/);
         text = paragraphs.map(para => {
             para = para.trim();
@@ -154,19 +150,18 @@ export class ChatManager {
             
             // Wrap in paragraph tags
             return `<p>${para}</p>`;
-        }).join('\n\n');
-        
-        // No need for placeholder replacements anymore, as we're handling code directly
+        }).join('\n'); // Use single newline instead of double for consistent spacing
         
         // Clean up empty paragraphs
         text = text.replace(/<p><\/p>/g, '');
         
-        // Add extra spacing between paragraphs and other block elements
-        text = text.replace(/(<\/p>)(<[ph])/g, '$1\n$2');
-        text = text.replace(/(<\/pre>)(<[ph])/g, '$1\n$2');
-        text = text.replace(/(<\/h\d>)(<[ph])/g, '$1\n$2');
-        text = text.replace(/(<div class="code-block-wrapper">)(<[ph])/g, '$1\n$2');
-        text = text.replace(/(<\/div>)(<[ph])/g, '$1\n$2');
+        // 3. Standardize spacing between elements (let CSS handle the visual spacing)
+        // Remove the extra spacing that was previously added
+        text = text.replace(/(<\/p>)(<[ph])/g, '$1$2');
+        text = text.replace(/(<\/pre>)(<[ph])/g, '$1$2');
+        text = text.replace(/(<\/h\d>)(<[ph])/g, '$1$2');
+        text = text.replace(/(<div class="code-block-wrapper">)(<[ph])/g, '$1$2');
+        text = text.replace(/(<\/div>)(<[ph])/g, '$1$2');
         
         return text;
     }
