@@ -738,4 +738,20 @@ export class ChatManager {
         this.lastUserMessageType = null;
         this.currentTranscript = '';
     }
+
+    // New method to display model information
+    addModelInfoMessage(modelName) {
+        // Create a subtle info message showing which model is active
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'chat-message model-info';
+        
+        // Format the model name for display (remove "models/" prefix and convert to title case)
+        const displayName = modelName.replace('models/', '').split('-').map(
+            word => word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+        
+        infoDiv.textContent = `Using ${displayName}`;
+        this.chatContainer.appendChild(infoDiv);
+        this.scrollToBottom();
+    }
 } 

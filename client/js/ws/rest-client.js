@@ -102,6 +102,51 @@ export class GeminiRestClient {
 
             if (!response.ok) {
                 const errorText = await response.text();
+                console.error(`API error (${response.status}):`, errorText);
+                
+                // Try to parse error JSON for better error messages
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    if (errorJson.error) {
+                        // For model not found/supported errors, provide a helpful message
+                        if (errorJson.error.code === 404 && errorJson.error.message.includes("is not found")) {
+                            // Extract model name from config
+                            const modelName = this.config.model.replace('models/', '');
+                            
+                            // Create custom message for experimental models
+                            if (modelName === 'gemini-2.5-pro') {
+                                let errorMessage = `The model "${modelName}" isn't available yet or is still in private preview.\n\n`;
+                                errorMessage += "To force using this experimental model without fallback, please:\n";
+                                errorMessage += "1. Open developer console (F12)\n";
+                                errorMessage += "2. Run: localStorage.setItem('enforceExperimentalModels', 'true')\n";
+                                errorMessage += "3. Reload the page\n\n";
+                                errorMessage += "For now, Gemini 2.0 Flash will be used as a fallback.\n";
+                                errorMessage += "You can also try these other stable models:\n";
+                                errorMessage += "- gemini-1.5-pro\n";
+                                errorMessage += "- gemini-1.5-flash\n";
+                                errorMessage += "- gemini-pro";
+                                
+                                this.emit('text', errorMessage);
+                                this.emit('turn_complete');
+                                return;
+                            }
+                            
+                            // General error for other models
+                            let errorMessage = `The model "${modelName}" is not available. Please try one of these models instead:\n`;
+                            errorMessage += "- gemini-1.5-pro (Gemini 1.5 Pro)\n";
+                            errorMessage += "- gemini-1.5-flash (Gemini 1.5 Flash)\n";
+                            errorMessage += "- gemini-pro (Gemini 1.0 Pro)";
+                            
+                            this.emit('text', errorMessage);
+                            this.emit('turn_complete');
+                            return;
+                        }
+                    }
+                } catch (parseError) {
+                    // If we can't parse the error, just continue with the original error
+                    console.warn("Could not parse error JSON:", parseError);
+                }
+                
                 throw new Error(`API error (${response.status}): ${errorText}`);
             }
 
@@ -114,6 +159,14 @@ export class GeminiRestClient {
                 data.candidates[0].content && 
                 data.candidates[0].content.parts && 
                 data.candidates[0].content.parts.length > 0) {
+                
+                // Add model information to the response if available
+                if (data.model) {
+                    const modelName = data.model.split('/').pop();
+                    console.log(`Response from model: ${data.model}`);
+                    // Emit model info event for UI updates
+                    this.emit('model_info', data.model);
+                }
                 
                 // Process each part of the response
                 for (const part of data.candidates[0].content.parts) {

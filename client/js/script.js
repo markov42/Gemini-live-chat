@@ -26,6 +26,18 @@ const geminiAgent = new GeminiAgent({
     toolManager
 });
 
+// Display which model is active upon connection
+geminiAgent.on('connected', () => {
+    // Show which model is currently active
+    chatManager.addModelInfoMessage(config.model);
+});
+
+// For REST API, we might get a more specific model from the response
+geminiAgent.on('model_info', (modelName) => {
+    // Update model info if we get a more specific model name from the API response
+    chatManager.addModelInfoMessage(modelName);
+});
+
 // Handle chat-related events
 geminiAgent.on('transcription', (transcript) => {
     chatManager.updateStreamingMessage(transcript);

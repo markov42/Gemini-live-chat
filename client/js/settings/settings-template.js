@@ -8,12 +8,24 @@ export const settingsTemplate = `
     <label for="modelSelection">AI Model</label>
     <select id="modelSelection">
         <option value="models/gemini-2.0-flash-exp">Gemini 2.0 Flash (Streaming, Audio & Video)</option>
-        <option value="models/gemini-2.5-pro-preview-03-25">Gemini 2.5 Pro (Best for Coding)</option>
         <option value="models/gemini-1.5-pro">Gemini 1.5 Pro (Reasoning)</option>
         <option value="models/gemini-1.5-flash">Gemini 1.5 Flash (Fast Responses)</option>
+        <option value="models/gemini-pro">Gemini 1.0 Pro (Legacy)</option>
+        <option value="models/gemini-2.5-pro">Gemini 2.5 Pro (Advanced Coding)</option>
     </select>
     <div class="settings-note">
         Note: Only Gemini 2.0 Flash supports streaming audio and video features. Other models will use text-only mode.
+    </div>
+</div>
+
+<div class="settings-group experimental-models-group">
+    <div class="checkbox-container">
+        <input type="checkbox" id="enforceExperimentalModels">
+        <label for="enforceExperimentalModels">Force experimental models (no fallback)</label>
+    </div>
+    <div class="settings-note">
+        Enable this option to force using experimental models like Gemini 2.5 Pro without falling back to stable models.
+        Note: This may result in errors if the model isn't publicly available yet.
     </div>
 </div>
 

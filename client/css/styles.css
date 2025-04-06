@@ -1208,26 +1208,46 @@ body.darwin {
 .checkbox-container {
     display: flex;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .checkbox-container input[type="checkbox"] {
-    margin-right: 10px;
-    width: 18px;
-    height: 18px;
-    accent-color: var(--accent-color);
+    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+    background-color: rgba(30, 30, 60, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    position: relative;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.checkbox-container input[type="checkbox"]:checked {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.checkbox-container input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
 }
 
 .checkbox-container label {
-    display: inline;
-    margin-bottom: 0;
+    margin-bottom: 0 !important;
+    cursor: pointer;
 }
 
-.help-text {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
-    margin-top: 5px;
-    margin-left: 28px;
+.experimental-models-group {
+    border-left: 3px solid #ff9800;
+    padding-left: 12px;
+    margin-left: 2px;
 }
 
 /* Chrome, Edge, Safari scrollbar styling */
@@ -1476,5 +1496,17 @@ body.darwin {
     font-size: 12px;
     color: rgba(255, 255, 255, 0.7);
     margin-top: 4px;
+    font-style: italic;
+}
+
+.model-info {
+    background-color: rgba(100, 100, 140, 0.15);
+    color: rgba(255, 255, 255, 0.7);
+    align-self: center;
+    font-size: 12px;
+    padding: 8px 12px;
+    margin: 8px 0;
+    border-radius: 12px;
+    max-width: 60%;
     font-style: italic;
 }

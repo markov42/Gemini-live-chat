@@ -5,7 +5,7 @@
  */
 import { GeminiWebsocketClient } from '../ws/client.js';
 import { GeminiRestClient } from '../ws/rest-client.js';
-import { isStreamingModel, getRestApiUrl } from '../config/config.js';
+import { isStreamingModel, getRestApiUrl, getSafeModel } from '../config/config.js';
 
 import { AudioRecorder } from '../audio/recorder.js';
 import { AudioStreamer } from '../audio/streamer.js';
@@ -156,6 +156,13 @@ export class GeminiAgent{
                 await this.handleToolCall(toolCall);
             });
         }
+        
+        // For REST client model information (non-streaming models)
+        if (!this.isStreaming) {
+            this.client.on('model_info', (modelName) => {
+                this.emit('model_info', modelName);
+            });
+        }
     }
         
     // TODO: Handle multiple function calls
@@ -169,6 +176,17 @@ export class GeminiAgent{
      * Connects to the Gemini API using the appropriate client.
      */
     async connect() {
+        // First, check if this model might need a fallback
+        const originalModel = this.config.model;
+        this.config.model = getSafeModel(this.config.model);
+        
+        if (originalModel !== this.config.model) {
+            console.warn(`Using fallback model: ${this.config.model} instead of ${originalModel}`);
+        }
+        
+        // Recalculate if this is a streaming model after potential model change
+        this.isStreaming = isStreamingModel(this.config.model);
+        
         // Use the appropriate client based on whether this is a streaming model
         if (this.isStreaming) {
             console.log("Using WebSocket client for streaming model: " + this.config.model);
@@ -182,6 +200,9 @@ export class GeminiAgent{
         await this.client.connect();
         this.setupEventListeners();
         this.connected = true;
+        
+        // Emit a connected event so other components can react
+        this.emit('connected');
     }
 
     /**

@@ -255,3 +255,109 @@ export function setupEventListeners(agent) {
 
 // Initialize settings
 settingsManager;
+
+// Set up the experimental models checkbox
+const setupExperimentalModelsCheckbox = () => {
+    const checkbox = document.getElementById('enforceExperimentalModels');
+    if (checkbox) {
+        // Set initial state from localStorage
+        checkbox.checked = localStorage.getItem('enforceExperimentalModels') === 'true';
+    }
+};
+
+// Save all the settings to localStorage
+const saveSettings = () => {
+    const apiKey = document.getElementById('apiKey').value.trim();
+    const deepgramApiKey = document.getElementById('deepgramApiKey').value.trim();
+    const selectedModel = document.getElementById('modelSelection').value;
+    const systemInstructions = document.getElementById('systemInstructions').value.trim();
+    const enforceExperimentalModels = document.getElementById('enforceExperimentalModels').checked;
+
+    // Basic validation
+    if (!apiKey) {
+        alert('API key is required');
+        return false;
+    }
+
+    // Save to localStorage
+    localStorage.setItem('apiKey', apiKey);
+    localStorage.setItem('deepgramApiKey', deepgramApiKey);
+    localStorage.setItem('selectedModel', selectedModel);
+    localStorage.setItem('systemInstructions', systemInstructions);
+    localStorage.setItem('enforceExperimentalModels', enforceExperimentalModels);
+
+    return true;
+};
+
+// Setup settings dialog
+const setupSettingsDialog = () => {
+    const settingsDialog = document.getElementById('settingsDialog');
+    const settingsOverlay = document.getElementById('settingsOverlay');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsCloseBtn = document.getElementById('settingsCloseBtn');
+    const settingsSaveBtn = document.getElementById('settingsSaveBtn');
+    
+    if (!settingsDialog || !settingsOverlay || !settingsBtn || !settingsCloseBtn || !settingsSaveBtn) {
+        return;
+    }
+
+    // Setup initial values
+    const apiKeyInput = document.getElementById('apiKey');
+    const deepgramApiKeyInput = document.getElementById('deepgramApiKey');
+    const modelSelection = document.getElementById('modelSelection');
+    const systemInstructions = document.getElementById('systemInstructions');
+
+    if (apiKeyInput) {
+        apiKeyInput.value = localStorage.getItem('apiKey') || '';
+    }
+    
+    if (deepgramApiKeyInput) {
+        deepgramApiKeyInput.value = localStorage.getItem('deepgramApiKey') || '';
+    }
+    
+    if (modelSelection) {
+        const savedModel = localStorage.getItem('selectedModel');
+        if (savedModel) {
+            modelSelection.value = savedModel;
+        }
+    }
+    
+    if (systemInstructions) {
+        systemInstructions.value = localStorage.getItem('systemInstructions') || '';
+    }
+    
+    // Setup experimental models checkbox
+    setupExperimentalModelsCheckbox();
+
+    // Open settings
+    settingsBtn.addEventListener('click', () => {
+        settingsDialog.classList.add('active');
+        settingsOverlay.classList.add('active');
+    });
+
+    // Close settings
+    settingsCloseBtn.addEventListener('click', () => {
+        settingsDialog.classList.remove('active');
+        settingsOverlay.classList.remove('active');
+    });
+
+    // Close when clicking outside
+    settingsOverlay.addEventListener('click', (e) => {
+        if (e.target === settingsOverlay) {
+            settingsDialog.classList.remove('active');
+            settingsOverlay.classList.remove('active');
+        }
+    });
+
+    // Save settings
+    settingsSaveBtn.addEventListener('click', () => {
+        if (saveSettings()) {
+            settingsDialog.classList.remove('active');
+            settingsOverlay.classList.remove('active');
+            
+            // Reload the page to apply new settings
+            // This ensures the correct model is loaded
+            window.location.reload();
+        }
+    });
+};
