@@ -47,7 +47,7 @@ Before diving in, ensure your system has:
    `yarn build:linux`  *(For Linux)*
 
 ## Demo Video
-[Demo Video Link TBD]
+[Watch the demo](demo.mp4)
 
 ## Contributing
 Contributions are welcomed. If you have an idea or found a bug, feel free to:
