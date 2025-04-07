@@ -136,9 +136,18 @@ export class GeminiModel extends BaseModel {
                     const textParts = parts.filter((p) => p.text);
                     console.log('Gemini text parts:', textParts.length);
 
+                    // Track processed text to avoid repetition
+                    let lastText = '';
+                    
                     // Emit each text part individually to maintain streaming behavior
                     textParts.forEach((p) => {
                         if (p.text && p.text.trim()) {
+                            // Skip if this text is the same as the last text we processed
+                            if (p.text === lastText) {
+                                console.log('[Gemini] Skipping duplicate text fragment:', p.text);
+                                return;
+                            }
+                            lastText = p.text;
                             this.emit('text', p.text);
                         }
                     });

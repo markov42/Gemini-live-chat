@@ -109,8 +109,9 @@ function setupEventHandlers(agent, chatManager, modelType) {
     let userTranscriptions = [];
     let userTranscriptionTimeout = null;
     
-    // Buffer specifically for OpenAI to prevent duplication
+    // Buffer specifically for OpenAI text rendering
     let openAIBuffer = '';
+    // Track last fragment to avoid duplicates (OpenAI emits each fragment twice)
     let lastOpenAIFragment = '';
 
     // Only set up transcription handlers for Gemini
@@ -156,8 +157,13 @@ function setupEventHandlers(agent, chatManager, modelType) {
     // Direct handling of text events with special handling for OpenAI
     agent.on('text', (text) => {
         if (modelType === 'openai') {
-            // For OpenAI, we need to detect and prevent duplicated text
-            // Each text fragment should only be sent to the UI once
+            // Skip empty text fragments
+            if (!text || text.trim() === '') {
+                return;
+            }
+            
+            // Check for duplicates in OpenAI text events - needed since we're getting
+            // events from both model.emit and agent.emit for OpenAI
             if (text === lastOpenAIFragment) {
                 console.log('[OpenAI] Skipping duplicate fragment:', text);
                 return;
@@ -166,25 +172,17 @@ function setupEventHandlers(agent, chatManager, modelType) {
             lastOpenAIFragment = text;
             openAIBuffer += text;
             
-            // Reset the entire message with the accumulated buffer
-            // This prevents duplications from showing in the UI
-            if (chatManager.currentStreamingMessage) {
-                chatManager.currentStreamedContent = openAIBuffer;
-                const messageContent = chatManager.currentStreamingMessage.querySelector('.message-content');
-                const formattedContent = chatManager.formatMarkdown(openAIBuffer);
-                messageContent.innerHTML = formattedContent;
+            try {
+                // For OpenAI, we need to ensure a streaming message exists
+                if (!chatManager.currentStreamingMessage) {
+                    chatManager.startModelMessage();
+                }
                 
-                // Apply formatting
-                chatManager.applySyntaxHighlighting();
-                chatManager.checkCodeBlocksScrollable();
-                chatManager.setupCopyButtons();
-                chatManager.scrollToBottom();
-            } else {
-                // If no streaming message exists yet, create one and set its content
-                const messageElement = chatManager.startModelMessage();
-                const messageContent = messageElement.querySelector('.message-content');
-                const formattedContent = chatManager.formatMarkdown(openAIBuffer);
-                messageContent.innerHTML = formattedContent;
+                // Update the accumulated content - this will properly format and display the message
+                chatManager.currentStreamedContent = openAIBuffer;
+                chatManager.updateStreamingMessage('');
+            } catch (error) {
+                console.error('[OpenAI] Error updating streaming message:', error);
             }
         } else {
             // For Gemini, continue with existing behavior

@@ -107,7 +107,7 @@ export class GeminiAgent{
         this.model.on('text', (text) => {
             // Directly pass through text fragments as they arrive
             if (text && text.trim()) {
-                // For OpenAI, the text is emitted as complete fragments that shouldn't be modified
+                // We need to emit text events for all models, including OpenAI
                 this.emit('text', text);
             }
         });

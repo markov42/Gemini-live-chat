@@ -34,10 +34,50 @@ export class ChatManager {
         // Create a reference to this to use in the callback function
         const self = this;
         
-        // Process code blocks with language specification
-        text = text.replace(/```([a-zA-Z0-9_+-]*)\n([\s\S]+?)```/g, function(match, language, code) {
+        // Process code blocks with language specification - ensure all regex patterns match correctly
+        text = text.replace(/```([a-zA-Z0-9_+-]*)\n?([\s\S]+?)```/g, function(match, language, code) {
+            // Fix common language label issues
+            if (language.includes('python') || language.includes('py')) {
+                language = 'python';
+            } else if (language.includes('javascript') || language.includes('js')) {
+                language = 'javascript';
+            } else if (language.includes('input') || language.includes('plain') || language.includes('text')) {
+                // Handle input/output examples as plaintext
+                language = 'plaintext';
+            } else if (language && !['plaintext', 'text', 'output', 'c', 'cpp', 'java', 'csharp', 'ruby', 'go', 'typescript'].includes(language)) {
+                // If language is not recognized, default to plaintext instead of using an unknown language
+                console.log(`Unrecognized language: ${language}, defaulting to plaintext`);
+                language = 'plaintext';
+            }
+            
             const displayLang = language || 'plaintext';
             const langClass = language ? `language-${language}` : 'language-plaintext';
+            
+            // Check if this is an input/output example rather than actual code
+            if ((code.includes('Input:') && code.includes('Output:')) || 
+                (code.trim().startsWith('Input:')) || 
+                language.includes('input')) {
+                // Don't treat input/output examples as code - use simple formatting
+                return `<div class="code-block-wrapper">
+                    <div class="code-block-header">
+                        <span class="code-language-indicator">Example</span>
+                        <button class="copy-code-button" title="Copy text">Copy</button>
+                    </div>
+                    <pre class="code-block"><code class="language-plaintext">${self.preserveIndentation(self.escapeHtml(code))}</code></pre>
+                </div>`;
+            }
+            
+            // Make sure the code is properly escaped before any processing
+            code = self.escapeHtml(code);
+            
+            // Fix common code issues before validation
+            if (code) {
+                // Fix missing spaces in common keywords like 'return' followed immediately by a value
+                code = code.replace(/\b(return|if|for|while)(&lt;|&gt;|\w+)/g, '$1 $2');
+                
+                // Fix common spacing issues around operators (with escaped HTML)
+                code = code.replace(/([a-zA-Z0-9_])(\+|\-|\*|\/|\=|&lt;|&gt;)([a-zA-Z0-9_])/g, '$1 $2 $3');
+            }
             
             // Validate code if it appears to be a programming language and validation is enabled
             let wasCodeCorrected = false;
@@ -51,25 +91,61 @@ export class ChatManager {
             
             return `<div class="code-block-wrapper${wasCodeCorrected ? ' code-corrected' : ''}">
                 <div class="code-block-header">
-                    <span class="code-language-indicator">${displayLang}</span>
+                    <span class="code-language-indicator">${self.escapeHtml(displayLang)}</span>
                     ${wasCodeCorrected ? '<span class="code-corrected-indicator" title="Code was automatically corrected for consistency">✓</span>' : ''}
                     <button class="copy-code-button" title="Copy code">Copy</button>
                 </div>
-                <pre class="code-block"><code class="${langClass}">${self.preserveCodeFormatting(code)}</code></pre>
+                <pre class="code-block"><code class="${langClass}">${self.preserveIndentation(code)}</code></pre>
             </div>`;
         });
         
-        // Handle inline code (single backtick)
+        // Custom handling for input/output examples that aren't in code blocks
+        // Look for patterns like "Input: [...] Output: [...]" that are on their own lines
+        const inputOutputRegex = /^(Input:\s*.+\s*Output:\s*.+)$/gm;
+        text = text.replace(inputOutputRegex, function(match, example) {
+            return `<div class="code-block-wrapper">
+                <div class="code-block-header">
+                    <span class="code-language-indicator">Example</span>
+                    <button class="copy-code-button" title="Copy text">Copy</button>
+                </div>
+                <pre class="code-block"><code class="language-plaintext">${self.preserveIndentation(self.escapeHtml(example))}</code></pre>
+            </div>`;
+        });
+        
+        // Handle inline code (single backtick) - make sure inline code is properly processed
         text = text.replace(/`([^`]+)`/g, function(match, code) {
             return `<code>${self.preserveCodeFormatting(code)}</code>`;
         });
         
-        // Handle headers
+        // Handle headers - improve detection by adding checks for headers without preceding newlines
         text = text.replace(/^##### (.*$)/gm, '<h5>$1</h5>');
         text = text.replace(/^#### (.*$)/gm, '<h4>$1</h4>');
         text = text.replace(/^### (.*$)/gm, '<h3>$1</h3>');
         text = text.replace(/^## (.*$)/gm, '<h2>$1</h2>');
         text = text.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+        
+        // Also detect headers that might not be at the start of a line (OpenAI sometimes formats this way)
+        // The key is to add a line break before the heading to ensure it's on its own line
+        text = text.replace(/([^\n])##### (.*$)/gm, '$1\n<h5>$2</h5>');
+        text = text.replace(/([^\n])#### (.*$)/gm, '$1\n<h4>$2</h4>');
+        text = text.replace(/([^\n])### (.*$)/gm, '$1\n<h3>$2</h3>');
+        text = text.replace(/([^\n])## (.*$)/gm, '$1\n<h2>$2</h2>');
+        text = text.replace(/([^\n])# (.*$)/gm, '$1\n<h1>$2</h1>');
+        
+        // Special case detection for headings without # prefix but with common heading names
+        // (e.g., "Problem Statement", "Approach", "Solution", etc.)
+        const commonHeadings = [
+            'Problem Statement', 'Problem Description', 'Problem', 
+            'Approach', 'Solution', 'Algorithm', 'Implementation',
+            'Complexity', 'Time Complexity', 'Space Complexity',
+            'Analysis', 'Example', 'Examples', 'Test Cases',
+            'Summary', 'Conclusion', 'Discussion', 'Results',
+            'Background', 'Introduction', 'Context'
+        ];
+        
+        // Create a regex pattern for common headings
+        const headingPattern = new RegExp(`([^\\n])(${commonHeadings.join('|')}):\\s`, 'g');
+        text = text.replace(headingPattern, '$1\n<h3>$2:</h3>\n');
         
         // Handle bold, italic, and bold+italic
         text = text.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
@@ -202,6 +278,7 @@ export class ChatManager {
 
     // Helper to escape HTML special characters
     escapeHtml(unsafe) {
+        if (!unsafe) return '';
         return unsafe
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
@@ -210,22 +287,45 @@ export class ChatManager {
             .replace(/'/g, "&#039;");
     }
 
+    // New helper to preserve indentation on already-escaped code
+    preserveIndentation(escapedCode) {
+        if (!escapedCode) return '';
+        // Preserve leading spaces by replacing spaces with non-breaking spaces
+        // Handle any amount of leading whitespace (even a single space) for Python indentation
+        return escapedCode.replace(/^( +)/gm, match => '&nbsp;'.repeat(match.length));
+    }
+
     // New helper to preserve code indentation while escaping HTML
     preserveCodeFormatting(code) {
-        return this.escapeHtml(code)
-            // Preserve leading spaces by replacing spaces with non-breaking spaces
-            .replace(/^ {2,}/gm, match => '&nbsp;'.repeat(match.length));
+        if (!code) return '';
+        return this.preserveIndentation(this.escapeHtml(code));
     }
 
     // New function to validate code blocks for consistency
     validateCodeBlock(code, language) {
         try {
+            // Don't try to modify already escaped code for now
+            // This is a safer approach until we can properly handle escaped HTML entities
+            if (code.includes('&lt;') || code.includes('&gt;') || code.includes('&amp;')) {
+                return code;
+            }
+            
             // First check for consistent variable naming
             const variableNameMap = {};
             let updatedCode = code;
             
+            // Add common domain-specific variable patterns
+            const commonVariablePatterns = {
+                'trapped_water': ['trappedWater', 'trapped_water', 'water_trapped', 'waterTrapped', 'trapped', 'water'],
+                'max_profit': ['maxProfit', 'max_profit', 'profit_max', 'profitMax', 'profit', 'max_p'],
+                'result_array': ['resultArray', 'result_array', 'array_result', 'arrayResult', 'results', 'res_array'],
+                'nums': ['numbers', 'num', 'arr', 'array', 'input_array', 'inputArray'],
+                'left_pointer': ['leftPointer', 'left_pointer', 'pointer_left', 'pointerLeft', 'left', 'l_ptr'],
+                'right_pointer': ['rightPointer', 'right_pointer', 'pointer_right', 'pointerRight', 'right', 'r_ptr']
+            };
+            
             // Match and collect variable declarations with common patterns
-            const varNameRegex = /\b(let|var|const|function)\s+([a-zA-Z0-9_$]+)\b|\b([a-zA-Z0-9_$]+)\s*\=|\bfunction\s+([a-zA-Z0-9_$]+)|\([^)]*\)\s*=>\s*{|\bclass\s+([a-zA-Z0-9_$]+)/g;
+            const varNameRegex = /\b(let|var|const|function|def)\s+([a-zA-Z0-9_$]+)\b|\b([a-zA-Z0-9_$]+)\s*[\=\:]\s*|\bfunction\s+([a-zA-Z0-9_$]+)|\([^)]*\)\s*=>\s*{|\bclass\s+([a-zA-Z0-9_$]+)/g;
             let match;
             while ((match = varNameRegex.exec(code)) !== null) {
                 const varName = match[2] || match[3] || match[4] || match[5];
@@ -236,14 +336,15 @@ export class ChatManager {
             }
             
             // Match parameter names in function declarations
-            const functionParamRegex = /function\s+([a-zA-Z0-9_$]+)\s*\(([^)]*)\)/g;
+            const functionParamRegex = /function\s+([a-zA-Z0-9_$]+)\s*\(([^)]*)\)|def\s+([a-zA-Z0-9_$]+)\s*\(([^)]*)\)/g;
             while ((match = functionParamRegex.exec(code)) !== null) {
-                if (match[2]) {
+                const params = match[2] || match[4];
+                if (params) {
                     // Parse parameter list
-                    const params = match[2].split(',').map(p => p.trim());
-                    params.forEach(param => {
+                    const paramsList = params.split(',').map(p => p.trim());
+                    paramsList.forEach(param => {
                         // Extract parameter name (handles patterns like "paramName = defaultValue")
-                        const paramName = param.split('=')[0].trim();
+                        const paramName = param.split(/[\=\:]/)[0].trim();
                         if (paramName && /^[a-zA-Z0-9_$]+$/.test(paramName)) {
                             variableNameMap[paramName.toLowerCase()] = paramName;
                         }
@@ -266,8 +367,17 @@ export class ChatManager {
                 'object': ['obj', 'o'],
                 'string': ['str', 's'],
                 'number': ['num', 'n'],
-                'boolean': ['bool', 'b']
+                'boolean': ['bool', 'b'],
+                'trappedwater': ['trapped_water', 'water_trapped', 'trapped', 'water'],
+                'maxheight': ['max_height', 'height_max', 'maximum_height', 'max_h']
             };
+            
+            // Add domain-specific patterns to the common variant map
+            Object.entries(commonVariablePatterns).forEach(([standard, variants]) => {
+                if (!commonVariants[standard.toLowerCase().replace('_', '')]) {
+                    commonVariants[standard.toLowerCase().replace('_', '')] = variants;
+                }
+            });
             
             // Build a map of potential related variables
             const relatedVars = {};
@@ -545,7 +655,9 @@ return dfs(root, 1, 1); // This should be inside the sumEvenGrandparent function
             // Apply any final formatting
             const messageContent = this.currentStreamingMessage.querySelector('.message-content');
             if (messageContent && this.currentStreamedContent) {
-                const formattedContent = this.formatMarkdown(this.currentStreamedContent);
+                // Ensure content is sanitized before formatting
+                const sanitizedContent = this.currentStreamedContent;
+                const formattedContent = this.formatMarkdown(sanitizedContent);
                 messageContent.innerHTML = formattedContent;
                 
                 // Make sure code blocks are properly highlighted and have copy buttons
@@ -569,8 +681,10 @@ return dfs(root, 1, 1); // This should be inside the sumEvenGrandparent function
         // Ensure text is a string (guard against undefined or null)
         const textFragment = text?.toString() || '';
         
-        // Don't process empty fragments
-        if (!textFragment) return;
+        // If text is provided, add it to the accumulated content
+        if (textFragment) {
+            this.currentStreamedContent += textFragment;
+        }
         
         if (!this.currentStreamingMessage) {
             this.startModelMessage();
@@ -581,38 +695,44 @@ return dfs(root, 1, 1); // This should be inside the sumEvenGrandparent function
             }
         }
         
+        // Make sure message still exists (could have been finalized by another process)
+        if (!this.currentStreamingMessage) return;
+        
         // Get the message content container
         const messageContent = this.currentStreamingMessage.querySelector('.message-content');
+        if (!messageContent) return;
         
-        // Check if we're using OpenAI by looking for a modelType indicator
-        const modelIndicator = document.getElementById('modelIndicator');
-        const isOpenAI = modelIndicator && modelIndicator.textContent.includes('OpenAI');
-        
-        // Add text to the accumulated content
-        this.currentStreamedContent += textFragment;
-        
-        // Format the accumulated content
+        // Format the accumulated content (ensuring it's properly sanitized)
+        // Only re-format when needed
         const formattedContent = this.formatMarkdown(this.currentStreamedContent);
         
-        // Update the message content - replace the entire content instead of appending
-        // This prevents duplication issues
+        // Update the message content
         messageContent.innerHTML = formattedContent;
         
-        // Make sure code blocks are properly highlighted
+        // Store a reference to the current streaming message before the async operations
+        const currentMessage = this.currentStreamingMessage;
+        
+        // Do the essential formatting for good user experience
         this.applySyntaxHighlighting();
         
-        // Add scrolling indicator to scrollable code blocks
-        this.checkCodeBlocksScrollable();
-        
-        // Set up copy buttons for code blocks
-        this.setupCopyButtons();
-        
-        // Scroll to the bottom
+        // Scroll to the bottom to keep the latest content visible
         this.scrollToBottom();
+        
+        // Schedule less critical operations for the next frame to avoid blocking rendering
+        requestAnimationFrame(() => {
+            // Check if the message is still the current streaming message
+            // It might have been finalized between when we started this update and now
+            if (this.currentStreamingMessage === currentMessage) {
+                this.checkCodeBlocksScrollable();
+                this.setupCopyButtons();
+            }
+        });
     }
 
     // New function to setup copy button event listeners
     setupCopyButtons() {
+        if (!this.currentStreamingMessage) return;
+        
         const copyButtons = this.currentStreamingMessage.querySelectorAll('.copy-code-button');
         copyButtons.forEach(button => {
             // Only add event listener if it doesn't already have one
@@ -643,11 +763,53 @@ return dfs(root, 1, 1); // This should be inside the sumEvenGrandparent function
     
     // New function to apply syntax highlighting
     applySyntaxHighlighting() {
+        if (!this.currentStreamingMessage) return;
+        
         if (window.hljs) {
             const codeBlocks = this.currentStreamingMessage.querySelectorAll('pre code');
             codeBlocks.forEach(block => {
+                // Only highlight blocks that haven't been highlighted yet
                 if (!block.classList.contains('hljs')) {
-                    window.hljs.highlightElement(block);
+                    try {
+                        // Double-check that the content is properly escaped
+                        const content = block.textContent;
+                        
+                        // Get the language class
+                        const classNames = block.className.split(' ');
+                        const languageClass = classNames.find(c => c.startsWith('language-'));
+                        
+                        // Check if this is a plaintext example (like Input/Output examples) and skip highlighting
+                        const isPlaintext = languageClass === 'language-plaintext' || !languageClass;
+                        const isExample = content.includes('Input:') && content.includes('Output:');
+                        
+                        if (isPlaintext || isExample) {
+                            // For plaintext, just ensure HTML is escaped but don't apply syntax highlighting
+                            block.innerHTML = this.escapeHtml(content);
+                            block.classList.add('hljs'); // Mark as processed
+                            return;
+                        }
+                        
+                        // Check if this is Python code (special handling for indentation)
+                        const isPython = languageClass && languageClass.includes('language-python');
+                        
+                        // If we need to re-escape - first clear the current content
+                        block.innerHTML = this.escapeHtml(content);
+                        
+                        // For Python, ensure indentation is preserved perfectly
+                        if (isPython) {
+                            // Replace all leading spaces with non-breaking spaces to preserve indentation
+                            const lines = block.innerHTML.split('\n');
+                            const formattedLines = lines.map(line => {
+                                return line.replace(/^( +)/g, match => '&nbsp;'.repeat(match.length));
+                            });
+                            block.innerHTML = formattedLines.join('\n');
+                        }
+                        
+                        // Now highlight the safely escaped content
+                        window.hljs.highlightElement(block);
+                    } catch (e) {
+                        console.error("Error highlighting code:", e);
+                    }
                 }
             });
         }
@@ -658,6 +820,8 @@ return dfs(root, 1, 1); // This should be inside the sumEvenGrandparent function
     
     // New function to check if code blocks are scrollable
     checkCodeBlocksScrollable() {
+        if (!this.currentStreamingMessage) return;
+        
         const codeBlocks = this.currentStreamingMessage.querySelectorAll('.code-block');
         codeBlocks.forEach(block => {
             // Remove existing indicators

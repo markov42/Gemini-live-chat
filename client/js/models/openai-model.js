@@ -331,9 +331,11 @@ export class OpenAIModel extends BaseModel {
                                 // Add text to accumulator first - include all content, even empty strings
                                 accumulatedText += content;
                                 
-                                // Simply emit the content once - without any duplicate checking logic here
-                                // The duplicate prevention will be handled at the script.js level
-                                this.emit('text', content);
+                                // Emit each chunk immediately for real-time streaming
+                                // Don't wait for larger chunks to accumulate
+                                if (content.length > 0) {
+                                    this.emit('text', content);
+                                }
                             }
                         } catch (err) {
                             console.error('Error parsing OpenAI stream chunk:', err, line);
