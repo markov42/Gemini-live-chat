@@ -133,8 +133,11 @@ function setupEventHandlers(agent, chatManager, modelType) {
 
     // Common handlers for both models
     agent.on('text_sent', (text) => {
+        if (modelType === 'openai') {
+            // For OpenAI, we need to show the user message before starting the response
+            chatManager.addUserMessage(text);
+        }
         chatManager.finalizeStreamingMessage();
-        chatManager.addUserMessage(text);
     });
 
     agent.on('interrupted', () => {
@@ -183,7 +186,6 @@ function setupEventHandlers(agent, chatManager, modelType) {
         newSendBtn.addEventListener('click', () => {
             const text = messageInput.value.trim();
             if (text) {
-                chatManager.addUserMessage(text);
                 agent.sendText(text);
                 messageInput.value = '';
             }
