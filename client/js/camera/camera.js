@@ -26,6 +26,8 @@ export class CameraManager {
         this.isDragging = false;
         this.dragOffset = { x: 0, y: 0 };
         this.isMinimized = false;
+        this.captureInterval = null;
+        this.onCapture = null;
     }
 
     /**
@@ -269,7 +271,56 @@ export class CameraManager {
     }
 
     /**
-     * Stop camera stream and cleanup resources
+     * Start the camera and begin capturing at regular intervals
+     * @param {Function} [onCapture] - Optional callback for captured images
+     * @returns {Promise<void>}
+     */
+    async start(onCapture) {
+        if (!this.isInitialized) {
+            await this.initialize();
+        }
+        
+        this.showPreview();
+        
+        // Store the callback if provided
+        if (onCapture) {
+            this.onCapture = onCapture;
+        }
+        
+        // Start capture interval if a callback is available
+        if (this.onCapture && !this.captureInterval) {
+            this.captureInterval = setInterval(async () => {
+                try {
+                    const base64Image = await this.capture();
+                    this.onCapture(base64Image);
+                } catch (error) {
+                    console.error('Error during camera capture:', error);
+                }
+            }, 1000 / 5); // Capture at 5 FPS by default
+        }
+        
+        return this.stream;
+    }
+
+    /**
+     * Stop the camera stream and cleanup
+     */
+    async stop() {
+        if (this.captureInterval) {
+            clearInterval(this.captureInterval);
+            this.captureInterval = null;
+        }
+        
+        this.hidePreview();
+        
+        if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+            this.stream = null;
+        }
+    }
+
+    /**
+     * Dispose of camera resources
      */
     dispose() {
         if (this.stream) {

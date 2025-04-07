@@ -212,101 +212,69 @@ export class OpenAIModel extends BaseModel {
         }
 
         this.currentController = new AbortController();
-        const signal = this.currentController.signal;
+        this.readingStream = true;
         
-        try {
-            // Add system message at the beginning if it exists in config
-            const messages = [...this.conversation];
-            if (this.config.systemInstruction?.parts?.[0]?.text) {
-                messages.unshift({
-                    role: 'system',
-                    content: this.config.systemInstruction.parts[0].text
-                });
-            }
+        const messages = this.conversation.map(msg => ({
+            role: msg.role,
+            content: msg.content,
+            ...(msg.tool_call_id && { tool_call_id: msg.tool_call_id }),
+            ...(msg.name && { name: msg.name }),
+            ...(msg.tool_calls && { tool_calls: msg.tool_calls })
+        }));
 
-            // Prepare function definitions for tools if they exist
-            const toolDefinitions = this.prepareFunctionDefinitions();
-            
-            console.log('[OpenAI] Preparing request with model:', this.modelName);
-            console.log('[OpenAI] Message count:', messages.length);
-            
-            // Create the request body
-            const requestBody = {
-                model: this.modelName,
-                messages: messages,
-                stream: true,
-                temperature: this.config.generationConfig?.temperature || 1.0,
-                top_p: this.config.generationConfig?.top_p || 1.0
-            };
-            
-            // Add tools if they exist
-            if (toolDefinitions) {
-                requestBody.tools = toolDefinitions;
-            }
-            
-            // Create the request options
-            const requestOptions = {
+        console.log('[OpenAI] Preparing request with model:', this.modelName);
+        console.log('[OpenAI] Message count:', messages.length);
+        
+        const requestBody = {
+            model: this.modelName,
+            messages: messages,
+            stream: true
+        };
+
+        // Add function definitions if available
+        const functions = this.prepareFunctionDefinitions();
+        if (functions) {
+            requestBody.tools = functions;
+        }
+
+        try {
+            console.log('[OpenAI] Sending request to API');
+            const response = await fetch(`${this.baseUrl}/chat/completions`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${this.apiKey}`
                 },
                 body: JSON.stringify(requestBody),
-                signal
-            };
+                signal: this.currentController.signal
+            });
 
-            console.log('[OpenAI] Sending request to API');
-            const response = await fetch(`${this.baseUrl}/chat/completions`, requestOptions);
-            
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('[OpenAI] API Error:', response.status, errorText);
-                throw new Error(`OpenAI API error (${response.status}): ${errorText}`);
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            console.log('[OpenAI] Response received, starting stream processing');
-            this.readingStream = true;
+            if (!response.body) {
+                throw new Error('ReadableStream not supported');
+            }
+
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let buffer = '';
-            
+
+            console.log('[OpenAI] Response received, starting stream processing');
+
             while (true) {
-                const { done, value } = await reader.read();
+                const { value, done } = await reader.read();
                 
                 if (done) {
                     console.log('[OpenAI] Stream complete');
-                    
-                    // Process any remaining data in the buffer before finishing
-                    if (buffer.trim()) {
-                        const lines = buffer.split('\n');
-                        for (const line of lines) {
-                            if (line.trim() && line.trim() !== 'data: [DONE]' && line.startsWith('data: ')) {
-                                try {
-                                    const jsonLine = line.replace(/^data: /, '').trim();
-                                    const data = JSON.parse(jsonLine);
-                                    const content = data.choices?.[0]?.delta?.content;
-                                    if (content !== undefined) { // Include all content, even empty strings
-                                        this.emit('text', content);
-                                    }
-                                } catch (err) {
-                                    console.error('Error parsing final OpenAI stream chunk:', err, line);
-                                }
-                            }
-                        }
-                    }
-                    
                     this.readingStream = false;
                     this.emit('turn_complete');
                     break;
                 }
 
-                // Process the streaming response
-                const chunk = decoder.decode(value, { stream: true });
-                buffer += chunk;
-                
-                // Split on lines and process each line
+                buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n');
-                // Keep the last possibly incomplete line in the buffer
                 buffer = lines.pop() || '';
                 
                 for (const line of lines) {
@@ -320,17 +288,48 @@ export class OpenAIModel extends BaseModel {
                             if (content !== undefined) { // Include all content, even empty strings
                                 this.emit('text', content);
                             }
-                        } catch (err) {
-                            console.error('Error parsing OpenAI stream chunk:', err, line);
-                            continue;
+                            
+                            // Handle function call deltas
+                            const toolCallDelta = data.choices?.[0]?.delta?.tool_calls;
+                            if (toolCallDelta) {
+                                this.handleToolCallDelta(toolCallDelta);
+                            }
+                        } catch (error) {
+                            console.error('Error parsing stream:', error);
+                        }
+                    }
+                }
+            }
+
+            // Add any remaining buffer content
+            if (buffer.trim()) {
+                const lines = buffer.split('\n');
+                for (const line of lines) {
+                    if (line.trim() && !line.includes('[DONE]')) {
+                        try {
+                            const jsonLine = line.replace(/^data: /, '').trim();
+                            const data = JSON.parse(jsonLine);
+                            const content = data.choices?.[0]?.delta?.content;
+                            if (content) {
+                                this.emit('text', content);
+                            }
+                        } catch (error) {
+                            console.error('Error parsing final buffer:', error);
                         }
                     }
                 }
             }
         } catch (error) {
-            console.error('[OpenAI] Request error:', error);
+            if (error.name === 'AbortError') {
+                console.log('[OpenAI] Request cancelled');
+            } else {
+                console.error('[OpenAI] Error during streaming:', error);
+                throw error;
+            }
+        } finally {
             this.readingStream = false;
-            throw error;
+            this.currentController = null;
+            this.emit('turn_complete'); // Add turn_complete event when stream is done
         }
     }
 

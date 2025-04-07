@@ -56,7 +56,6 @@ class SettingsManager {
         this.elements.saveBtn.addEventListener('click', () => {
             this.saveSettings();
             this.hide();
-            window.location.reload();
         });
 
         // Toggle devices section
@@ -169,30 +168,70 @@ Remember to be friendly, helpful, and tailor your responses to the user's needs.
         this.elements.systemInstructionsTextarea.value = localStorage.getItem('systemInstructions') || defaultInstructions;
     }
 
+    validateSettings() {
+        const modelType = this.elements.modelTypeSelect.value;
+        
+        // Check required API keys based on model type
+        if (modelType === 'openai' && !this.elements.openaiApiKeyInput.value.trim()) {
+            alert('OpenAI API key is required when using OpenAI model');
+            return false;
+        }
+        if (modelType === 'gemini' && !this.elements.geminiApiKeyInput.value.trim()) {
+            alert('Gemini API key is required when using Gemini model');
+            return false;
+        }
+        
+        return true;
+    }
+
     saveSettings() {
+        // Validate settings before saving
+        if (!this.validateSettings()) {
+            return;
+        }
+
         console.log('Saving settings with model type:', this.elements.modelTypeSelect.value);
         
         // Save model type settings
         localStorage.setItem('modelType', this.elements.modelTypeSelect.value);
         
         // Save model-specific settings
-        localStorage.setItem('geminiApiKey', this.elements.geminiApiKeyInput.value);
-        localStorage.setItem('geminiModelName', this.elements.geminiModelNameSelect.value);
-        localStorage.setItem('openaiApiKey', this.elements.openaiApiKeyInput.value);
-        localStorage.setItem('openaiModelName', this.elements.openaiModelNameSelect.value);
+        if (this.elements.geminiApiKeyInput.value) {
+            localStorage.setItem('geminiApiKey', this.elements.geminiApiKeyInput.value);
+        }
+        if (this.elements.geminiModelNameSelect.value) {
+            localStorage.setItem('geminiModelName', this.elements.geminiModelNameSelect.value);
+        }
+        if (this.elements.openaiApiKeyInput.value) {
+            localStorage.setItem('openaiApiKey', this.elements.openaiApiKeyInput.value);
+        }
+        if (this.elements.openaiModelNameSelect.value) {
+            localStorage.setItem('openaiModelName', this.elements.openaiModelNameSelect.value);
+        }
         
         console.log('OpenAI API key set, length:', this.elements.openaiApiKeyInput.value.length);
         console.log('OpenAI model name set to:', this.elements.openaiModelNameSelect.value);
         
         // Save other settings
-        localStorage.setItem('deepgramApiKey', this.elements.deepgramApiKeyInput.value);
-        localStorage.setItem('systemInstructions', this.elements.systemInstructionsTextarea.value);
+        if (this.elements.deepgramApiKeyInput.value) {
+            localStorage.setItem('deepgramApiKey', this.elements.deepgramApiKeyInput.value);
+        }
+        if (this.elements.systemInstructionsTextarea.value) {
+            localStorage.setItem('systemInstructions', this.elements.systemInstructionsTextarea.value);
+        }
         
         // Save selected device IDs
-        localStorage.setItem('selectedAudioDeviceId', this.elements.audioInputSelect.value);
-        localStorage.setItem('selectedVideoDeviceId', this.elements.videoInputSelect.value);
+        if (this.elements.audioInputSelect.value) {
+            localStorage.setItem('selectedAudioDeviceId', this.elements.audioInputSelect.value);
+        }
+        if (this.elements.videoInputSelect.value) {
+            localStorage.setItem('selectedVideoDeviceId', this.elements.videoInputSelect.value);
+        }
         
         console.log('Settings saved, reloading app...');
+        
+        // Reinitialize the app with new settings
+        window.location.reload();
     }
 
     toggleCollapsible(toggle, content) {

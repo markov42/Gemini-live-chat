@@ -9,34 +9,112 @@ import { setupEventListeners } from './dom/events.js';
 
 const TRANSCRIPTION_DEBOUNCE_MS = 1000;
 
-function initializeApplication() {
-    const config = getConfig();
-    const modelType = getModelType();
-    const geminiApiKey = getGeminiApiKey();
-    const openaiApiKey = getOpenAIApiKey();
-    const deepgramApiKey = getDeepgramApiKey();
+async function initializeApplication() {
+    try {
+        const config = getConfig();
+        const modelType = getModelType();
+        const geminiApiKey = getGeminiApiKey();
+        const openaiApiKey = getOpenAIApiKey();
+        const deepgramApiKey = getDeepgramApiKey();
 
-    // Show which model is active
-    displayActiveModel(modelType);
-
-    const toolManager = new ToolManager();
-    toolManager.registerTool('googleSearch', new GoogleSearchTool());
-
-    const chatManager = new ChatManager();
-
-    const agent = createAndConfigureAgent(config, modelType, geminiApiKey, openaiApiKey, deepgramApiKey, toolManager);
-    setupEventHandlers(agent, chatManager, modelType);
-    
-    agent.connect().then(() => {
-        if (agent.initialize) {
-            return agent.initialize();
+        // Validate required API keys
+        if (modelType === 'gemini' && !geminiApiKey) {
+            throw new Error('Gemini API key is required. Please add it in settings.');
         }
-    }).catch(error => {
-        console.error("Error initializing agent:", error);
-        chatManager.addSystemMessage("Error initializing chat agent. Please check your API keys and settings.");
+        if (modelType === 'openai' && !openaiApiKey) {
+            throw new Error('OpenAI API key is required. Please add it in settings.');
+        }
+
+        // Show which model is active
+        displayActiveModel(modelType);
+
+        const toolManager = new ToolManager();
+        toolManager.registerTool('googleSearch', new GoogleSearchTool());
+
+        const chatManager = new ChatManager();
+        window.chatManager = chatManager; // Make it globally accessible
+
+        const agent = createAndConfigureAgent(config, modelType, geminiApiKey, openaiApiKey, deepgramApiKey, toolManager);
+        
+        // Set up all event handlers before connecting
+        setupEventHandlers(agent, chatManager, modelType);
+        setupEventListeners(agent);
+        
+        // Connect and initialize the agent
+        try {
+            await agent.connect();
+            if (agent.initialize) {
+                await agent.initialize();
+            }
+            console.log('Agent initialized successfully');
+        } catch (error) {
+            console.error("Error initializing agent:", error);
+            chatManager.addSystemMessage("Error initializing chat agent. Please check your API keys and settings.");
+            throw error; // Re-throw to be caught by outer try-catch
+        }
+        
+        // Store the agent globally for access by event handlers
+        window.agent = agent;
+        
+        return { agent, chatManager };
+    } catch (error) {
+        console.error("Application initialization error:", error);
+        // Show error in UI
+        const errorContainer = document.getElementById('error-container');
+        if (errorContainer) {
+            errorContainer.textContent = `Error: ${error.message}`;
+            errorContainer.style.display = 'block';
+        }
+        
+        // Create a minimal chat interface that allows opening settings
+        const chatManager = new ChatManager();
+        chatManager.addSystemMessage("⚠️ Error: " + error.message);
+        chatManager.addSystemMessage("Please check your settings and ensure all required API keys are provided.");
+        
+        // Enable the settings button
+        const settingsButton = document.getElementById('settings-button');
+        if (settingsButton) {
+            settingsButton.disabled = false;
+        }
+        
+        throw error;
+    }
+}
+
+function createAndConfigureAgent(config, modelType, geminiApiKey, openaiApiKey, deepgramApiKey, toolManager) {
+    console.log(`Creating agent with model type: ${modelType}`);
+    
+    // Validate API keys again just to be safe
+    if (modelType === 'gemini' && !geminiApiKey) {
+        throw new Error('Gemini API key is required');
+    }
+    if (modelType === 'openai' && !openaiApiKey) {
+        throw new Error('OpenAI API key is required');
+    }
+    
+    // For OpenAI, only enable text-based communication
+    const transcribeUsersSpeech = modelType === 'gemini';
+    const transcribeModelsSpeech = modelType === 'gemini';
+    
+    // Add tool declarations to config
+    if (toolManager && toolManager.getToolDeclarations) {
+        config.tools = config.tools || {};
+        config.tools.functionDeclarations = toolManager.getToolDeclarations();
+    }
+    
+    const agent = new GeminiAgent({
+        config,
+        modelType,
+        geminiApiKey,
+        openaiApiKey,
+        deepgramApiKey,
+        modelSampleRate: MODEL_SAMPLE_RATE,
+        transcribeModelsSpeech,
+        transcribeUsersSpeech,
+        toolManager
     });
     
-    setupEventListeners(agent);
+    return agent;
 }
 
 function displayActiveModel(modelType) {
@@ -85,26 +163,6 @@ function displayActiveModel(modelType) {
     }
 }
 
-function createAndConfigureAgent(config, modelType, geminiApiKey, openaiApiKey, deepgramApiKey, toolManager) {
-    console.log(`Creating agent with model type: ${modelType}`);
-    
-    // For OpenAI, only enable text-based communication
-    const transcribeUsersSpeech = modelType === 'gemini';
-    const transcribeModelsSpeech = modelType === 'gemini';
-    
-    return new GeminiAgent({
-        config,
-        modelType,
-        geminiApiKey,
-        openaiApiKey,
-        deepgramApiKey,
-        modelSampleRate: MODEL_SAMPLE_RATE,
-        transcribeModelsSpeech,
-        transcribeUsersSpeech,
-        toolManager
-    });
-}
-
 function setupEventHandlers(agent, chatManager, modelType) {
     let userTranscriptions = [];
     let userTranscriptionTimeout = null;
@@ -125,69 +183,71 @@ function setupEventHandlers(agent, chatManager, modelType) {
             }
             
             userTranscriptionTimeout = setTimeout(() => {
-                processUserTranscriptions(userTranscriptions, chatManager, agent);
+                const fullTranscript = userTranscriptions.join(' ');
                 userTranscriptions = [];
-            }, TRANSCRIPTION_DEBOUNCE_MS);
+                agent.sendText(fullTranscript);
+            }, 1000); // Wait 1 second after last transcription before sending
         });
     }
 
-    // Common handlers for both models
+    // Handle when text is sent by the user
     agent.on('text_sent', (text) => {
-        // First finalize any existing message
-        chatManager.finalizeStreamingMessage();
-        // Then show the user's message
-        chatManager.addUserMessage(text);
-        // Finally, prepare for model response
-        chatManager.startModelMessage();
+        chatManager.finalizeStreamingMessage(); // Finalize any existing message
+        chatManager.addUserMessage(text); // Show the user's message
+        chatManager.startModelMessage(); // Prepare for model response
+    });
+    
+    // Handle model content updates (for Gemini)
+    agent.on('content', (content) => {
+        if (content.modelTurn && content.modelTurn.parts) {
+            const textParts = content.modelTurn.parts.filter(p => p.text);
+            textParts.forEach(part => {
+                chatManager.updateStreamingMessage(part.text);
+            });
+        }
     });
 
-    agent.on('interrupted', () => {
-        chatManager.finalizeStreamingMessage();
-    });
-
-    agent.on('turn_complete', () => {
-        chatManager.finalizeStreamingMessage();
-    });
-
-    // Direct handling of text events with special handling for OpenAI
+    // Handle direct text events (for OpenAI)
     agent.model.on('text', (text) => {
-        if (!text || text.trim() === '') {
-            return;
-        }
-        
-        try {
-            // Update with the new text fragment
-            chatManager.updateStreamingMessage(text);
-        } catch (error) {
-            console.error('Error updating streaming message:', error);
+        if (!text || text.trim() === '') return;
+        chatManager.updateStreamingMessage(text);
+    });
+
+    // Handle turn completion
+    agent.on('turn_complete', () => {
+        console.log('Turn complete, finalizing message');
+        chatManager.finalizeStreamingMessage();
+    });
+
+    // Handle interruptions
+    agent.on('interrupted', () => {
+        console.log('Model interrupted, finalizing message');
+        chatManager.finalizeStreamingMessage();
+    });
+    
+    // Set up the message input and send button
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    
+    // Create a new send button to replace the old one (to remove old event listeners)
+    const newSendBtn = sendBtn.cloneNode(true);
+    sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
+    
+    newSendBtn.addEventListener('click', () => {
+        const text = messageInput.value.trim();
+        if (text) {
+            agent.sendText(text);
+            messageInput.value = '';
         }
     });
     
-    // Add a specific handler for the send button to directly handle text input
-    const sendBtn = document.getElementById('sendBtn');
-    const messageInput = document.getElementById('messageInput');
-    
-    if (sendBtn && messageInput) {
-        // Remove any existing listeners to avoid duplicates
-        const newSendBtn = sendBtn.cloneNode(true);
-        sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
-        
-        newSendBtn.addEventListener('click', () => {
-            const text = messageInput.value.trim();
-            if (text) {
-                agent.sendText(text);
-                messageInput.value = '';
-            }
-        });
-        
-        // Handle enter key in the input field
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                newSendBtn.click();
-            }
-        });
-    }
+    // Handle enter key in the input field
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            newSendBtn.click();
+        }
+    });
 }
 
 function processUserTranscriptions(transcriptions, chatManager, agent) {
@@ -203,4 +263,12 @@ function processUserTranscriptions(transcriptions, chatManager, agent) {
     }
 }
 
-initializeApplication();
+// Initialize the application when the document is ready
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const { agent, chatManager } = await initializeApplication();
+        console.log('Application initialized successfully');
+    } catch (error) {
+        console.error('Failed to initialize application:', error);
+    }
+});

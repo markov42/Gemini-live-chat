@@ -30,6 +30,8 @@ export class ScreenManager {
         this.selectedSourceId = null;
         this.sources = [];
         this.selectionCallback = null;
+        this.onCapture = null;
+        this.captureInterval = null;
     }
 
     /**
@@ -480,5 +482,76 @@ export class ScreenManager {
         this.ctx = null;
         this.isInitialized = false;
         this.aspectRatio = null;
+    }
+
+    /**
+     * Start screen sharing and begin capturing at regular intervals
+     * @param {boolean} [showSelectionDialog=false] - Whether to show source selection dialog
+     * @param {Function} [onCapture] - Optional callback for captured images
+     * @returns {Promise<MediaStream>} The screen sharing media stream
+     */
+    async start(showSelectionDialog = false, onCapture) {
+        try {
+            // Store the callback if provided
+            if (onCapture) {
+                this.onCapture = onCapture;
+            }
+            
+            // If not initialized or showing selection dialog is requested
+            if (!this.isInitialized || showSelectionDialog) {
+                let sourceId = this.selectedSourceId;
+                
+                // Show selection dialog if requested
+                if (showSelectionDialog) {
+                    sourceId = await this.showSourceSelectionDialog();
+                    if (!sourceId) {
+                        throw new Error('Screen sharing cancelled by user');
+                    }
+                }
+                
+                // Initialize with the selected source
+                await this.initialize(sourceId);
+            } else {
+                // Just show the preview if already initialized
+                this.showPreview();
+            }
+            
+            // Start capture interval if a callback is available
+            if (this.onCapture && !this.captureInterval) {
+                const fps = localStorage.getItem('fps') || 5;
+                this.captureInterval = setInterval(async () => {
+                    try {
+                        const base64Image = await this.capture();
+                        this.onCapture(base64Image);
+                    } catch (error) {
+                        console.error('Error during screen capture:', error);
+                    }
+                }, 1000 / fps);
+            }
+            
+            return this.stream;
+        } catch (error) {
+            console.error('Failed to start screen sharing:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Stop screen sharing
+     */
+    async stop() {
+        if (this.captureInterval) {
+            clearInterval(this.captureInterval);
+            this.captureInterval = null;
+        }
+        
+        this.hidePreview();
+        
+        if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+            this.stream = null;
+        }
+        
+        this.isInitialized = false;
     }
 }

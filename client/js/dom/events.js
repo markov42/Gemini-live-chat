@@ -4,16 +4,13 @@ import settingsManager from '../settings/settings-manager.js';
 let isCameraActive = false;
 
 /**
- * Ensures the agent is connected and initialized
+ * Ensures the agent is connected
  */
-const ensureAgentReady = async (agent) => {
+async function ensureAgentReady(agent) {
     if (!agent.connected) {
         await agent.connect();
     }
-    if (!agent.initialized) {
-        await agent.initialize();
-    }
-};
+}
 
 /**
  * Checks if the current model is OpenAI
@@ -60,7 +57,9 @@ function disableMediaFeatures() {
 function connectAgentOnStartup(agent) {
     (async () => {
         try {
-            await ensureAgentReady(agent);
+            if (!agent.connected) {
+                await agent.connect();
+            }
         } catch (error) {
             console.error('Error auto-connecting:', error);
         }
@@ -68,22 +67,32 @@ function connectAgentOnStartup(agent) {
 }
 
 function setupMediaControls(agent) {
+    let isMicActive = false;
+    let isCameraActive = false;
+
     // Microphone toggle handler
     elements.micBtn.addEventListener('click', async () => {
         try {
-            await ensureAgentReady(agent);
+            if (!agent.connected) {
+                await agent.connect();
+            }
+
             await agent.toggleMic();
-            elements.micBtn.classList.toggle('active');
+            isMicActive = !isMicActive;
+            elements.micBtn.classList.toggle('active', isMicActive);
         } catch (error) {
             console.error('Error toggling microphone:', error);
             elements.micBtn.classList.remove('active');
+            isMicActive = false;
         }
     });
 
     // Camera toggle handler
     elements.cameraBtn.addEventListener('click', async () => {
         try {
-            await ensureAgentReady(agent);
+            if (!agent.connected) {
+                await agent.connect();
+            }
             
             if (!isCameraActive) {
                 await agent.startCameraCapture();
@@ -113,14 +122,16 @@ function setupScreenSharing(agent) {
     // Left-click handler for screen button
     elements.screenBtn.addEventListener('click', async () => {
         try {
+            if (!agent.connected) {
+                await agent.connect();
+            }
+
             if (isScreenShareActive) {
                 await agent.stopScreenShare();
                 elements.screenBtn.classList.remove('active');
                 isScreenShareActive = false;
             } else {
                 const showSelectionDialog = localStorage.getItem('showScreenSelectionDialog') === 'true';
-                
-                await ensureAgentReady(agent);
                 await agent.startScreenShare(showSelectionDialog);
                 elements.screenBtn.classList.add('active');
                 isScreenShareActive = true;
@@ -163,7 +174,9 @@ function createScreenContextMenu(agent, isActive, onActivate) {
             hideContextMenu();
             
             try {
-                await ensureAgentReady(agent);
+                if (!agent.connected) {
+                    await agent.connect();
+                }
                 
                 if (action === 'share-default' && !isActive) {
                     await agent.startScreenShare(false);

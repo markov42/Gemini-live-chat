@@ -222,9 +222,19 @@ export class GeminiModel extends BaseModel {
      * @param {string} base64image - Base64 encoded image data
      */
     async sendImage(base64image) {
+        if (!base64image) {
+            console.error('Attempted to send empty image data to Gemini');
+            return;
+        }
+        
         const data = { realtimeInput: { mediaChunks: [{ mimeType: 'image/jpeg', data: base64image }] } };
-        await this.sendJSON(data);
-        console.debug(`Image with size of ${Math.round(base64image.length/1024)} KB sent to Gemini.`);
+        console.log(`Sending image to Gemini, size: ${Math.round(base64image.length/1024)} KB`);
+        try {
+            await this.sendJSON(data);
+            console.debug(`Image successfully sent to Gemini.`);
+        } catch (error) {
+            console.error("Error sending image to Gemini:", error);
+        }
     }
 
     /**
@@ -232,10 +242,16 @@ export class GeminiModel extends BaseModel {
      * @param {string} base64audio - Base64 encoded audio data
      */
     async sendAudio(base64audio) {
+        if (!base64audio) {
+            console.error('Attempted to send empty audio data to Gemini');
+            return;
+        }
+        
         const data = { realtimeInput: { mediaChunks: [{ mimeType: 'audio/pcm', data: base64audio }] } };
-        console.log(`Sending audio chunk to Gemini, size: ${base64audio.length} chars`);
+        console.log(`Sending audio chunk to Gemini, size: ${Math.round(base64audio.length/1024)} KB`);
         try {
             await this.sendJSON(data);
+            console.debug(`Audio chunk successfully sent to Gemini.`);
         } catch (error) {
             console.error("Error sending audio to Gemini:", error);
         }
