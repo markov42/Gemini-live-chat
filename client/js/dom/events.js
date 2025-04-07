@@ -1,22 +1,6 @@
 import elements from './elements.js';
 import settingsManager from '../settings/settings-manager.js';
 
-/**
- * Updates UI to show disconnect button and hide connect button
- */
-const showDisconnectButton = () => {
-    elements.connectBtn.style.display = 'none';
-    elements.disconnectBtn.style.display = 'block';
-};
-
-/**
- * Updates UI to show connect button and hide disconnect button
- */
-const showConnectButton = () => {
-    elements.disconnectBtn.style.display = 'none';
-    elements.connectBtn.style.display = 'block';
-};
-
 let isCameraActive = false;
 
 /**
@@ -27,7 +11,6 @@ let isCameraActive = false;
 const ensureAgentReady = async (agent) => {
     if (!agent.connected) {
         await agent.connect();
-        showDisconnectButton();
     }
     if (!agent.initialized) {
         await agent.initialize();
@@ -39,26 +22,14 @@ const ensureAgentReady = async (agent) => {
  * @param {GeminiAgent} agent - The main application agent instance
  */
 export function setupEventListeners(agent) {
-    // Disconnect handler
-    elements.disconnectBtn.addEventListener('click', async () => {
-        try {
-            await agent.disconnect();
-            showConnectButton();
-            [elements.cameraBtn, elements.screenBtn, elements.micBtn].forEach(btn => btn.classList.remove('active'));
-            isCameraActive = false;
-        } catch (error) {
-            console.error('Error disconnecting:', error);
-        }
-    });
-
-    // Connect handler
-    elements.connectBtn.addEventListener('click', async () => {
+    // Connect the agent automatically on startup
+    (async () => {
         try {
             await ensureAgentReady(agent);
         } catch (error) {
-            console.error('Error connecting:', error);
+            console.error('Error auto-connecting:', error);
         }
-    });
+    })();
 
     // Microphone toggle handler
     elements.micBtn.addEventListener('click', async () => {
@@ -249,9 +220,31 @@ export function setupEventListeners(agent) {
         }
     });
 
-    // Settings button click
-    elements.settingsBtn.addEventListener('click', () => settingsManager.show());
+    // Settings button handler
+    elements.settingsBtn.addEventListener('click', () => {
+        settingsManager.show();
+    });
+    
+    // Handle keyboard shortcuts
+    document.addEventListener('keydown', async (e) => {
+        // Only process if not in an input/textarea field
+        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+            return;
+        }
+        
+        // Alt+M: Toggle microphone
+        if (e.altKey && e.key === 'm') {
+            elements.micBtn.click();
+        }
+        
+        // Alt+C: Toggle camera
+        if (e.altKey && e.key === 'c') {
+            elements.cameraBtn.click();
+        }
+        
+        // Alt+S: Toggle screen sharing
+        if (e.altKey && e.key === 's') {
+            elements.screenBtn.click();
+        }
+    });
 }
-
-// Initialize settings
-settingsManager;
