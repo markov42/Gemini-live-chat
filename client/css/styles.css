@@ -844,6 +844,11 @@ body.darwin {
     box-sizing: border-box;
 }
 
+/* Style for corrected code blocks */
+.code-block-wrapper.code-corrected {
+    border-left: 2px solid #4CAF50; /* Green border to indicate correction */
+}
+
 .code-block-header {
     display: flex;
     justify-content: space-between;
@@ -861,6 +866,21 @@ body.darwin {
     text-transform: lowercase;
 }
 
+/* Code correction indicator */
+.code-corrected-indicator {
+    color: #4CAF50;
+    font-size: 12px;
+    margin-left: 8px;
+    font-weight: bold;
+    opacity: 0.8;
+    cursor: help;
+    transition: opacity 0.2s ease;
+}
+
+.code-corrected-indicator:hover {
+    opacity: 1;
+}
+
 .copy-code-button {
     background-color: rgba(80, 80, 100, 0.5);
     color: rgba(255, 255, 255, 0.8);
@@ -872,6 +892,7 @@ body.darwin {
     transition: all 0.2s ease;
     font-family: var(--font-primary);
     outline: none;
+    margin-left: auto; /* Push to the right side */
 }
 
 .copy-code-button:hover {

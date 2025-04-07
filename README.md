@@ -9,7 +9,8 @@ This Electron-based application serves as an innovative AI chatbox that enhances
 - **Microphone Support:** Users can communicate verbally with the AI, making the interaction more fluid and conversational.
 - **Screen Sharing:** The AI can view the user's screen in real-time, providing contextual assistance and troubleshooting help.
 - **Simultaneous Inputs:** Mix and match inputs—use your camera and mic together, screen share with voice, or activate all three for a fully immersive experience.  
-- **Contextual Assistance:** The AI analyzes your screen content and delivers smart, relevant suggestions or solutions.  
+- **Contextual Assistance:** The AI analyzes your screen content and delivers smart, relevant suggestions or solutions.
+- **Code Validation:** Automatically validates and corrects inconsistencies in code blocks, ensuring proper variable naming and function scoping.
 
 ## Prerequisites  
 Before diving in, ensure your system has:  
