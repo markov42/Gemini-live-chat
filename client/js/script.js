@@ -26,51 +26,40 @@ const geminiAgent = new GeminiAgent({
     toolManager
 });
 
-// Handle chat-related events
 geminiAgent.on('transcription', (transcript) => {
     chatManager.updateStreamingMessage(transcript);
 });
 
-// Improved user transcription handling with debouncing
+const TRANSCRIPTION_DEBOUNCE_MS = 1000;
 let userTranscriptions = [];
 let userTranscriptionTimeout = null;
 
 geminiAgent.on('user_transcription', (transcript) => {
     console.log("User speech transcription received:", transcript);
     
-    // Only process non-empty transcriptions
     if (transcript && transcript.trim().length > 0) {
-        // Add this transcription to our collection
         userTranscriptions.push(transcript);
         
-        // Clear any existing timeout
         if (userTranscriptionTimeout) {
             clearTimeout(userTranscriptionTimeout);
         }
         
-        // Set a new timeout to process the transcriptions after a delay
-        // This helps collect multiple transcript segments into one cohesive message
         userTranscriptionTimeout = setTimeout(() => {
             try {
-                // Join all collected transcriptions
                 const fullTranscript = userTranscriptions.join(' ').trim();
                 
                 if (fullTranscript.length > 0) {
                     console.log("Processing complete user transcription:", fullTranscript);
                     
-                    // Display transcribed speech in the UI
                     chatManager.addUserMessage("🎙️: " + fullTranscript);
-                    
-                    // Send transcribed text to the model
                     geminiAgent.sendText(fullTranscript);
                 }
                 
-                // Reset the collection
                 userTranscriptions = [];
             } catch (error) {
                 console.error("Error processing user transcription:", error);
             }
-        }, 1000); // 1 second delay to collect multiple transcript segments
+        }, TRANSCRIPTION_DEBOUNCE_MS);
     }
 });
 
@@ -81,8 +70,6 @@ geminiAgent.on('text_sent', (text) => {
 
 geminiAgent.on('interrupted', () => {
     chatManager.finalizeStreamingMessage();
-    // Remove the automatic audio message creation that's causing the bug
-    // Only add audio messages when we're actually recording audio
 });
 
 geminiAgent.on('turn_complete', () => {

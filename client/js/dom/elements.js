@@ -1,20 +1,20 @@
 // DOM elements object
 const elements = {
-    // Button elements
+    // Buttons
     disconnectBtn: document.getElementById('disconnectBtn'),
     connectBtn: document.getElementById('connectBtn'),
     micBtn: document.getElementById('micBtn'),
     cameraBtn: document.getElementById('cameraBtn'),
     screenBtn: document.getElementById('screenBtn'),
     settingsBtn: document.getElementById('settingsBtn'),
+    sendBtn: document.getElementById('sendBtn'),
 
-    // Preview elements
+    // Previews
     cameraPreview: document.getElementById('cameraPreview'),
     screenPreview: document.getElementById('screenPreview'),
 
-    // Text input elements
-    messageInput: document.getElementById('messageInput'),
-    sendBtn: document.getElementById('sendBtn')
+    // Input
+    messageInput: document.getElementById('messageInput')
 };
 
 export default elements;

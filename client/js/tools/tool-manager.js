@@ -1,6 +1,5 @@
 /**
- * Managing class where tools can be registered for easier use
- * Each tool must implement execute() and getDeclaration() methods.
+ * Managing class for registering and executing tools
  */
 
 export class ToolManager {
