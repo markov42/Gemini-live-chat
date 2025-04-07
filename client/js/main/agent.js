@@ -200,8 +200,10 @@ export class GeminiAgent{
      */
     async sendText(text) {
         console.log(`Sending text to ${this.modelType} model:`, text);
-        await this.model.sendText(text);
+        // First emit text_sent to ensure UI shows user message
         this.emit('text_sent', text);
+        // Then send to model
+        await this.model.sendText(text);
     }
 
     /**

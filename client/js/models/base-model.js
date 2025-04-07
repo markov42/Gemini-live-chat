@@ -56,7 +56,19 @@ export class BaseModel {
      * @param {boolean} endOfTurn - Whether this is the end of the user's turn
      */
     async sendText(text, endOfTurn = true) {
-        throw new Error('Method sendText() must be implemented by subclass');
+        // Emit text_sent before any model-specific processing
+        this.emit('text_sent', text);
+        await this._sendTextImplementation(text, endOfTurn);
+    }
+
+    /**
+     * Model-specific implementation of sending text
+     * @param {string} text - The text to send
+     * @param {boolean} endOfTurn - Whether this is the end of the user's turn
+     * @protected
+     */
+    async _sendTextImplementation(text, endOfTurn = true) {
+        throw new Error('Method _sendTextImplementation() must be implemented by subclass');
     }
 
     /**

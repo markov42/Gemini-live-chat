@@ -97,7 +97,7 @@ export class OpenAIModel extends BaseModel {
      * @param {string} text - The text to send
      * @param {boolean} endOfTurn - Whether this is the end of the user's turn
      */
-    async sendText(text, endOfTurn = true) {
+    async _sendTextImplementation(text, endOfTurn = true) {
         console.log('[OpenAI] Sending text:', text);
         
         // Add the user message to the conversation history
@@ -105,6 +105,12 @@ export class OpenAIModel extends BaseModel {
             role: 'user',
             content: text
         });
+
+        // Ensure any previous request is done
+        if (this.readingStream) {
+            this.cancelCurrentRequest();
+            await new Promise(resolve => setTimeout(resolve, 100)); // Give time for cleanup
+        }
 
         if (endOfTurn) {
             await this.sendRequest();
@@ -262,7 +268,6 @@ export class OpenAIModel extends BaseModel {
             this.readingStream = true;
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
-            let accumulatedText = '';
             let buffer = '';
             
             while (true) {
@@ -281,10 +286,6 @@ export class OpenAIModel extends BaseModel {
                                     const data = JSON.parse(jsonLine);
                                     const content = data.choices?.[0]?.delta?.content;
                                     if (content !== undefined) { // Include all content, even empty strings
-                                        console.log('[OpenAI] Processing final content fragment:', JSON.stringify(content));
-                                        // Add to accumulated text first
-                                        accumulatedText += content;
-                                        // Then emit
                                         this.emit('text', content);
                                     }
                                 } catch (err) {
@@ -312,60 +313,24 @@ export class OpenAIModel extends BaseModel {
                     if (!line.trim() || line.trim() === 'data: [DONE]') continue;
                     
                     if (line.startsWith('data: ')) {
-                        const jsonLine = line.replace(/^data: /, '').trim();
-                        
                         try {
-                            // Parse the JSON data
+                            const jsonLine = line.replace(/^data: /, '').trim();
                             const data = JSON.parse(jsonLine);
-                            
-                            // Check for function calls
-                            if (data.choices?.[0]?.delta?.tool_calls) {
-                                this.handleToolCallDelta(data.choices[0].delta.tool_calls);
-                                continue;
-                            }
-                            
-                            // Process content - carefully preserve exactly what OpenAI sends
                             const content = data.choices?.[0]?.delta?.content;
-                            if (content !== undefined) { // Check explicitly for undefined to include empty strings
-                                console.log('[OpenAI] Received content fragment:', JSON.stringify(content));
-                                
-                                // Add text to accumulator first - include all content, even empty strings
-                                accumulatedText += content;
-                                
-                                // We store last emitted content to avoid duplicate emissions
-                                // OpenAI sometimes sends the same fragment twice
-                                
-                                // Only emit if content is new and not empty
-                                if (content.length > 0 && content !== this.lastEmittedContent) {
-                                    this.lastEmittedContent = content;
-                                    this.emit('text', content);
-                                }
+                            if (content !== undefined) { // Include all content, even empty strings
+                                this.emit('text', content);
                             }
                         } catch (err) {
                             console.error('Error parsing OpenAI stream chunk:', err, line);
+                            continue;
                         }
                     }
                 }
             }
-
-            // Add the assistant's response to the conversation
-            if (accumulatedText) {
-                this.conversation.push({
-                    role: 'assistant',
-                    content: accumulatedText
-                });
-            }
-            
         } catch (error) {
-            if (error.name === 'AbortError') {
-                console.log('OpenAI request was cancelled');
-                this.emit('interrupted');
-            } else {
-                console.error('Error in OpenAI request:', error);
-            }
-        } finally {
+            console.error('[OpenAI] Request error:', error);
             this.readingStream = false;
-            this.currentController = null;
+            throw error;
         }
     }
 

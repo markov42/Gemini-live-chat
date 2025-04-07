@@ -133,11 +133,12 @@ function setupEventHandlers(agent, chatManager, modelType) {
 
     // Common handlers for both models
     agent.on('text_sent', (text) => {
-        if (modelType === 'openai') {
-            // For OpenAI, we need to show the user message before starting the response
-            chatManager.addUserMessage(text);
-        }
+        // First finalize any existing message
         chatManager.finalizeStreamingMessage();
+        // Then show the user's message
+        chatManager.addUserMessage(text);
+        // Finally, prepare for model response
+        chatManager.startModelMessage();
     });
 
     agent.on('interrupted', () => {
@@ -150,27 +151,15 @@ function setupEventHandlers(agent, chatManager, modelType) {
 
     // Direct handling of text events with special handling for OpenAI
     agent.model.on('text', (text) => {
-        if (modelType === 'openai') {
-            // Skip empty text fragments
-            if (!text || text.trim() === '') {
-                return;
-            }
-            
-            try {
-                // For OpenAI, we need to ensure a streaming message exists
-                if (!chatManager.currentStreamingMessage) {
-                    chatManager.startModelMessage();
-                }
-                
-                // Directly update with the new text fragment
-                // Don't accumulate in our own buffer
-                chatManager.updateStreamingMessage(text);
-            } catch (error) {
-                console.error('[OpenAI] Error updating streaming message:', error);
-            }
-        } else {
-            // For Gemini, continue with existing behavior
+        if (!text || text.trim() === '') {
+            return;
+        }
+        
+        try {
+            // Update with the new text fragment
             chatManager.updateStreamingMessage(text);
+        } catch (error) {
+            console.error('Error updating streaming message:', error);
         }
     });
     

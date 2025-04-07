@@ -203,7 +203,7 @@ export class GeminiModel extends BaseModel {
      * @param {string} text - The text to send
      * @param {boolean} endOfTurn - Whether this is the end of the user's turn
      */
-    async sendText(text, endOfTurn = true) {
+    async _sendTextImplementation(text, endOfTurn = true) {
         const formattedText = { 
             clientContent: { 
                 turns: [{
