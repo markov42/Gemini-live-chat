@@ -10,6 +10,14 @@ export const settingsTemplate = `
 </div>
 
 <div class="settings-group">
+    <div class="collapsible" id="systemInstructionsToggle">System Instructions ▼</div>
+    <div class="collapsible-content">
+        <label for="systemInstructions">Custom system instructions for Gemini</label>
+        <textarea id="systemInstructions" placeholder="Enter custom system instructions for the AI model..." rows="4"></textarea>
+    </div>
+</div>
+
+<div class="settings-group">
     <div class="collapsible" id="deviceToggle">Audio & Video Devices ▼</div>
     <div class="collapsible-content">
         <div class="settings-group">

@@ -27,6 +27,9 @@ class SettingsManager {
             overlay: this.overlay,
             apiKeyInput: this.dialog.querySelector('#apiKey'),
             deepgramApiKeyInput: this.dialog.querySelector('#deepgramApiKey'),
+            systemInstructionsToggle: this.dialog.querySelector('#systemInstructionsToggle'),
+            systemInstructionsContent: this.dialog.querySelector('#systemInstructionsToggle + .collapsible-content'),
+            systemInstructionsTextarea: this.dialog.querySelector('#systemInstructions'),
             deviceToggle: this.dialog.querySelector('#deviceToggle'),
             deviceContent: this.dialog.querySelector('#deviceToggle + .collapsible-content'),
             audioInputSelect: this.dialog.querySelector('#audioInput'),
@@ -53,6 +56,11 @@ class SettingsManager {
         // Toggle devices section
         this.elements.deviceToggle.addEventListener('click', () => {
             this.toggleCollapsible(this.elements.deviceToggle, this.elements.deviceContent);
+        });
+
+        // Toggle system instructions section
+        this.elements.systemInstructionsToggle.addEventListener('click', () => {
+            this.toggleCollapsible(this.elements.systemInstructionsToggle, this.elements.systemInstructionsContent);
         });
 
         // Refresh devices button
@@ -108,11 +116,13 @@ class SettingsManager {
         // Load values from localStorage - only keep the ones we need
         this.elements.apiKeyInput.value = localStorage.getItem('apiKey') || '';
         this.elements.deepgramApiKeyInput.value = localStorage.getItem('deepgramApiKey') || '';
+        this.elements.systemInstructionsTextarea.value = localStorage.getItem('systemInstructions') || '';
     }
 
     saveSettings() {
         localStorage.setItem('apiKey', this.elements.apiKeyInput.value);
         localStorage.setItem('deepgramApiKey', this.elements.deepgramApiKeyInput.value);
+        localStorage.setItem('systemInstructions', this.elements.systemInstructionsTextarea.value);
         
         // Save selected device IDs
         localStorage.setItem('selectedAudioDeviceId', this.elements.audioInputSelect.value);
