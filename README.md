@@ -15,13 +15,14 @@ This Electron-based application serves as an innovative AI chatbox that enhances
 Before diving in, ensure your system has:  
 - [Node.js](https://nodejs.org/) v18 or newer  
 - [Yarn](https://yarnpkg.com/) package manager  
-- Google AI Studio [API key](https://ai.google.dev/)  
+- Google AI Studio [API key](https://ai.google.dev/)
+- Deepgram API for speech to text [API key](https://deepgram.com/product/speech-to-text)
 - Windows/macOS/Linux (64-bit)  
 
 ## Quick Start
 
 1. **Get your API key**  
-   Sign up for access to the Google AI Studio and obtain your API key.
+   Sign up for access to the Google AI Studio and Deepgram and obtain your API key.
 
 2. **Clone the repository**  
    To get the project on your local machine, run:
@@ -47,7 +48,7 @@ Before diving in, ensure your system has:
    `yarn build:linux`  *(For Linux)*
 
 ## Demo Video
-[Demo Video Link TBD]
+[![Watch the demo](https://img.youtube.com/vi/BWN4G3ipz5Q/0.jpg)](https://www.youtube.com/watch?v=BWN4G3ipz5Q)
 
 ## Contributing
 Contributions are welcomed. If you have an idea or found a bug, feel free to:
