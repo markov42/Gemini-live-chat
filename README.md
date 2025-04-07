@@ -16,7 +16,7 @@ Before diving in, ensure your system has:
 - [Node.js](https://nodejs.org/) v18 or newer  
 - [Yarn](https://yarnpkg.com/) package manager  
 - Google AI Studio [API key](https://ai.google.dev/)
-- Deepgram API for speech to text (https://deepgram.com/product/speech-to-text)
+- Deepgram API for speech to text [API key](https://deepgram.com/product/speech-to-text)
 - Windows/macOS/Linux (64-bit)  
 
 ## Quick Start
