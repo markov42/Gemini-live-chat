@@ -7,37 +7,48 @@ import { ChatManager } from './chat/chat-manager.js';
 
 import { setupEventListeners } from './dom/events.js';
 
-const url = getWebsocketUrl();
-const config = getConfig();
-const deepgramApiKey = getDeepgramApiKey();
-
-const toolManager = new ToolManager();
-toolManager.registerTool('googleSearch', new GoogleSearchTool());
-
-const chatManager = new ChatManager();
-
-const geminiAgent = new GeminiAgent({
-    url,
-    config,
-    deepgramApiKey,
-    modelSampleRate: MODEL_SAMPLE_RATE,
-    transcribeModelsSpeech: true,
-    transcribeUsersSpeech: true,
-    toolManager
-});
-
-geminiAgent.on('transcription', (transcript) => {
-    chatManager.updateStreamingMessage(transcript);
-});
-
 const TRANSCRIPTION_DEBOUNCE_MS = 1000;
-let userTranscriptions = [];
-let userTranscriptionTimeout = null;
 
-geminiAgent.on('user_transcription', (transcript) => {
-    console.log("User speech transcription received:", transcript);
+function initializeApplication() {
+    const url = getWebsocketUrl();
+    const config = getConfig();
+    const deepgramApiKey = getDeepgramApiKey();
+
+    const toolManager = new ToolManager();
+    toolManager.registerTool('googleSearch', new GoogleSearchTool());
+
+    const chatManager = new ChatManager();
+
+    const geminiAgent = createAndConfigureAgent(url, config, deepgramApiKey, toolManager);
+    setupEventHandlers(geminiAgent, chatManager);
     
-    if (transcript && transcript.trim().length > 0) {
+    geminiAgent.connect();
+    setupEventListeners(geminiAgent);
+}
+
+function createAndConfigureAgent(url, config, deepgramApiKey, toolManager) {
+    return new GeminiAgent({
+        url,
+        config,
+        deepgramApiKey,
+        modelSampleRate: MODEL_SAMPLE_RATE,
+        transcribeModelsSpeech: false,
+        transcribeUsersSpeech: true,
+        toolManager
+    });
+}
+
+function setupEventHandlers(agent, chatManager) {
+    let userTranscriptions = [];
+    let userTranscriptionTimeout = null;
+
+    agent.on('transcription', (transcript) => {
+        chatManager.updateStreamingMessage(transcript);
+    });
+
+    agent.on('user_transcription', (transcript) => {
+        if (!transcript || transcript.trim().length === 0) return;
+        
         userTranscriptions.push(transcript);
         
         if (userTranscriptionTimeout) {
@@ -45,42 +56,40 @@ geminiAgent.on('user_transcription', (transcript) => {
         }
         
         userTranscriptionTimeout = setTimeout(() => {
-            try {
-                const fullTranscript = userTranscriptions.join(' ').trim();
-                
-                if (fullTranscript.length > 0) {
-                    console.log("Processing complete user transcription:", fullTranscript);
-                    
-                    chatManager.addUserMessage("🎙️: " + fullTranscript);
-                    geminiAgent.sendText(fullTranscript);
-                }
-                
-                userTranscriptions = [];
-            } catch (error) {
-                console.error("Error processing user transcription:", error);
-            }
+            processUserTranscriptions(userTranscriptions, chatManager, agent);
+            userTranscriptions = [];
         }, TRANSCRIPTION_DEBOUNCE_MS);
+    });
+
+    agent.on('text_sent', (text) => {
+        chatManager.finalizeStreamingMessage();
+        chatManager.addUserMessage(text);
+    });
+
+    agent.on('interrupted', () => {
+        chatManager.finalizeStreamingMessage();
+    });
+
+    agent.on('turn_complete', () => {
+        chatManager.finalizeStreamingMessage();
+    });
+
+    agent.on('text', (text) => {
+        chatManager.updateStreamingMessage(text);
+    });
+}
+
+function processUserTranscriptions(transcriptions, chatManager, agent) {
+    try {
+        const fullTranscript = transcriptions.join(' ').trim();
+        
+        if (fullTranscript.length > 0) {
+            chatManager.addUserMessage("🎙️: " + fullTranscript);
+            agent.sendText(fullTranscript);
+        }
+    } catch (error) {
+        console.error("Error processing user transcription:", error);
     }
-});
+}
 
-geminiAgent.on('text_sent', (text) => {
-    chatManager.finalizeStreamingMessage();
-    chatManager.addUserMessage(text);
-});
-
-geminiAgent.on('interrupted', () => {
-    chatManager.finalizeStreamingMessage();
-});
-
-geminiAgent.on('turn_complete', () => {
-    chatManager.finalizeStreamingMessage();
-});
-
-geminiAgent.on('text', (text) => {
-    console.log('text', text);
-    chatManager.updateStreamingMessage(text);
-});
-
-geminiAgent.connect();
-
-setupEventListeners(geminiAgent);
+initializeApplication();

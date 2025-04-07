@@ -85,7 +85,10 @@ export class GeminiAgent{
     setupEventListeners() {
         // Handle incoming text from the model
         this.client.on('text', (text) => {
-            this.emit('text', text);
+            // Directly pass through text fragments as they arrive
+            if (text && text.trim()) {
+                this.emit('text', text);
+            }
         });
     
         // Handle incoming audio data from the model

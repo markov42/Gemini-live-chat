@@ -225,11 +225,14 @@ export class ChatManager {
             this.startModelMessage();
         }
         
-        // Append new text while trimming leading/trailing spaces
-        this.currentTranscript += text;
+        // Accumulate text fragments into complete response
+        // Only update if text contains new content
+        if (text && !this.currentTranscript.includes(text)) {
+            this.currentTranscript += text;
+        }
         
         try {
-            // Format the complete transcript each time
+            // Format the complete transcript 
             this.currentStreamingMessage.innerHTML = this.formatMarkdown(this.currentTranscript);
             
             // Add event listeners to copy buttons

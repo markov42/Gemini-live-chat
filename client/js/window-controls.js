@@ -22,29 +22,20 @@ function setupCustomWindowControls() {
     const windowControls = document.createElement('div');
     windowControls.className = 'window-controls';
 
-    const minimizeBtn = document.createElement('button');
-    minimizeBtn.className = 'window-control-btn minimize-btn';
-    minimizeBtn.title = 'Minimize';
-    minimizeBtn.addEventListener('click', () => {
-        if (window.api && window.api.minimizeWindow) {
+    const minimizeBtn = createWindowButton('minimize-btn', 'Minimize', () => {
+        if (window.api?.minimizeWindow) {
             window.api.minimizeWindow();
         }
     });
 
-    const maximizeBtn = document.createElement('button');
-    maximizeBtn.className = 'window-control-btn maximize-btn';
-    maximizeBtn.title = 'Maximize';
-    maximizeBtn.addEventListener('click', () => {
-        if (window.api && window.api.maximizeWindow) {
+    const maximizeBtn = createWindowButton('maximize-btn', 'Maximize', () => {
+        if (window.api?.maximizeWindow) {
             window.api.maximizeWindow();
         }
     });
 
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'window-control-btn close-btn';
-    closeBtn.title = 'Close';
-    closeBtn.addEventListener('click', () => {
-        if (window.api && window.api.closeWindow) {
+    const closeBtn = createWindowButton('close-btn', 'Close', () => {
+        if (window.api?.closeWindow) {
             window.api.closeWindow();
         }
     });
@@ -54,4 +45,12 @@ function setupCustomWindowControls() {
     windowControls.appendChild(closeBtn);
 
     document.body.appendChild(windowControls);
+}
+
+function createWindowButton(className, title, clickHandler) {
+    const button = document.createElement('button');
+    button.className = `window-control-btn ${className}`;
+    button.title = title;
+    button.addEventListener('click', clickHandler);
+    return button;
 } 

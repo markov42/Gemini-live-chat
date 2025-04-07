@@ -153,8 +153,12 @@ export class GeminiWebsocketClient {
                     // Filter out text parts
                     const textParts = parts.filter((p) => p.text);
                     console.log(`${this.name} text parts:`, textParts.length);
+
+                    // Emit each text part individually to maintain streaming behavior
                     textParts.forEach((p) => {
-                        this.emit('text', p.text);
+                        if (p.text && p.text.trim()) {
+                            this.emit('text', p.text);
+                        }
                     });
 
                     // Filter out audio parts from the model's content parts
