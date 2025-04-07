@@ -209,26 +209,8 @@ function hideContextMenu() {
 }
 
 function setupMessageHandling(agent) {
-    const sendMessage = async () => {
-        try {
-            await ensureAgentReady(agent);
-            const text = elements.messageInput.value.trim();
-            if (text) {
-                await agent.sendText(text);
-                elements.messageInput.value = '';
-            }
-        } catch (error) {
-            console.error('Error sending message:', error);
-        }
-    };
-
-    elements.sendBtn.addEventListener('click', sendMessage);
-    elements.messageInput.addEventListener('keypress', (event) => {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            sendMessage();
-        }
-    });
+    // Message handling is now managed in script.js
+    console.debug('[Events] Message handling is managed in script.js');
 }
 
 function setupSettingsButton() {

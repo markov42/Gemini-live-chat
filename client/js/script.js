@@ -108,11 +108,6 @@ function createAndConfigureAgent(config, modelType, geminiApiKey, openaiApiKey, 
 function setupEventHandlers(agent, chatManager, modelType) {
     let userTranscriptions = [];
     let userTranscriptionTimeout = null;
-    
-    // Buffer specifically for OpenAI text rendering
-    let openAIBuffer = '';
-    // Track last fragment to avoid duplicates (OpenAI emits each fragment twice)
-    let lastOpenAIFragment = '';
 
     // Only set up transcription handlers for Gemini
     if (modelType === 'gemini') {
@@ -144,33 +139,19 @@ function setupEventHandlers(agent, chatManager, modelType) {
 
     agent.on('interrupted', () => {
         chatManager.finalizeStreamingMessage();
-        openAIBuffer = '';
-        lastOpenAIFragment = '';
     });
 
     agent.on('turn_complete', () => {
         chatManager.finalizeStreamingMessage();
-        openAIBuffer = '';
-        lastOpenAIFragment = '';
     });
 
     // Direct handling of text events with special handling for OpenAI
-    agent.on('text', (text) => {
+    agent.model.on('text', (text) => {
         if (modelType === 'openai') {
             // Skip empty text fragments
             if (!text || text.trim() === '') {
                 return;
             }
-            
-            // Check for duplicates in OpenAI text events - needed since we're getting
-            // events from both model.emit and agent.emit for OpenAI
-            if (text === lastOpenAIFragment) {
-                console.log('[OpenAI] Skipping duplicate fragment:', text);
-                return;
-            }
-            
-            lastOpenAIFragment = text;
-            openAIBuffer += text;
             
             try {
                 // For OpenAI, we need to ensure a streaming message exists
@@ -178,9 +159,9 @@ function setupEventHandlers(agent, chatManager, modelType) {
                     chatManager.startModelMessage();
                 }
                 
-                // Update the accumulated content - this will properly format and display the message
-                chatManager.currentStreamedContent = openAIBuffer;
-                chatManager.updateStreamingMessage('');
+                // Directly update with the new text fragment
+                // Don't accumulate in our own buffer
+                chatManager.updateStreamingMessage(text);
             } catch (error) {
                 console.error('[OpenAI] Error updating streaming message:', error);
             }

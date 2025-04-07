@@ -24,6 +24,7 @@ export class OpenAIModel extends BaseModel {
         this.conversation = [];
         this.currentController = null; // For cancelling ongoing requests
         this.readingStream = false;
+        this.lastEmittedContent = ''; // Track last emitted content to avoid duplicates
         
         console.log('OpenAI model initialized with model:', this.modelName);
         console.log('API key length:', this.apiKey.length);
@@ -331,9 +332,12 @@ export class OpenAIModel extends BaseModel {
                                 // Add text to accumulator first - include all content, even empty strings
                                 accumulatedText += content;
                                 
-                                // Emit each chunk immediately for real-time streaming
-                                // Don't wait for larger chunks to accumulate
-                                if (content.length > 0) {
+                                // We store last emitted content to avoid duplicate emissions
+                                // OpenAI sometimes sends the same fragment twice
+                                
+                                // Only emit if content is new and not empty
+                                if (content.length > 0 && content !== this.lastEmittedContent) {
+                                    this.lastEmittedContent = content;
                                     this.emit('text', content);
                                 }
                             }

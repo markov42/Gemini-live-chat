@@ -23,6 +23,7 @@ export class GeminiModel extends BaseModel {
         this.ws = null;
         this.isConnecting = false;
         this.connectionPromise = null;
+        this.lastEmittedText = '';
     }
 
     /**
@@ -132,25 +133,22 @@ export class GeminiModel extends BaseModel {
                     let parts = serverContent.modelTurn.parts;
                     console.log('Gemini model turn, parts count:', parts.length);
                 
-                    // Filter out text parts
+                    // Handle text parts
                     const textParts = parts.filter((p) => p.text);
                     console.log('Gemini text parts:', textParts.length);
 
-                    // Track processed text to avoid repetition
-                    let lastText = '';
-                    
-                    // Emit each text part individually to maintain streaming behavior
-                    textParts.forEach((p) => {
-                        if (p.text && p.text.trim()) {
-                            // Skip if this text is the same as the last text we processed
-                            if (p.text === lastText) {
-                                console.log('[Gemini] Skipping duplicate text fragment:', p.text);
-                                return;
+                    // Process text parts in order
+                    if (textParts.length > 0) {
+                        // Get the latest text part as it contains the most complete content
+                        const latestPart = textParts[textParts.length - 1];
+                        if (latestPart.text && latestPart.text.trim()) {
+                            // Only emit if the text is different from what we've seen
+                            if (latestPart.text !== this.lastEmittedText) {
+                                this.lastEmittedText = latestPart.text;
+                                this.emit('text', latestPart.text);
                             }
-                            lastText = p.text;
-                            this.emit('text', p.text);
                         }
-                    });
+                    }
 
                     // Filter out audio parts from the model's content parts
                     const audioParts = parts.filter((p) => p.inlineData && p.inlineData.mimeType.startsWith('audio/pcm'));

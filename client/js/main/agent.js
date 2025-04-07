@@ -105,11 +105,9 @@ export class GeminiAgent{
         
         // Handle incoming text from the model
         this.model.on('text', (text) => {
-            // Directly pass through text fragments as they arrive
-            if (text && text.trim()) {
-                // We need to emit text events for all models, including OpenAI
-                this.emit('text', text);
-            }
+            // We no longer need to re-emit text events since they're handled directly
+            // by the script's event handlers on the model
+            console.debug('[Agent] Received text from model, but not re-emitting');
         });
     
         // Handle incoming audio data from the model

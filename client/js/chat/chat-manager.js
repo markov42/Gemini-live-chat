@@ -5,6 +5,7 @@ export class ChatManager {
         this.lastUserMessageType = null; // 'text' or 'audio'
         this.currentTranscript = ''; // Add this to store accumulated transcript
         this.enableCodeValidation = true; // Default to true, can be disabled if tests fail
+        this.currentStreamedContent = ''; // Add this to track current content
         
         // Initialize the validation system
         this.initCodeValidation();
@@ -681,9 +682,15 @@ return dfs(root, 1, 1); // This should be inside the sumEvenGrandparent function
         // Ensure text is a string (guard against undefined or null)
         const textFragment = text?.toString() || '';
         
-        // If text is provided, add it to the accumulated content
         if (textFragment) {
-            this.currentStreamedContent += textFragment;
+            // Check if the new text is a complete message that includes our current content
+            if (this.currentStreamedContent && textFragment.includes(this.currentStreamedContent)) {
+                // If so, just use the new text as it's more complete
+                this.currentStreamedContent = textFragment;
+            } else {
+                // Otherwise, append the new fragment
+                this.currentStreamedContent += textFragment;
+            }
         }
         
         if (!this.currentStreamingMessage) {
