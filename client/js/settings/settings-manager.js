@@ -25,7 +25,13 @@ class SettingsManager {
         this.elements = {
             dialog: this.dialog,
             overlay: this.overlay,
-            apiKeyInput: this.dialog.querySelector('#apiKey'),
+            modelTypeSelect: this.dialog.querySelector('#modelType'),
+            geminiSettingsGroup: this.dialog.querySelector('#geminiSettingsGroup'),
+            openaiSettingsGroup: this.dialog.querySelector('#openaiSettingsGroup'),
+            geminiApiKeyInput: this.dialog.querySelector('#geminiApiKey'),
+            geminiModelNameSelect: this.dialog.querySelector('#geminiModelName'),
+            openaiApiKeyInput: this.dialog.querySelector('#openaiApiKey'),
+            openaiModelNameSelect: this.dialog.querySelector('#openaiModelName'),
             deepgramApiKeyInput: this.dialog.querySelector('#deepgramApiKey'),
             systemInstructionsToggle: this.dialog.querySelector('#systemInstructionsToggle'),
             systemInstructionsContent: this.dialog.querySelector('#systemInstructionsToggle + .collapsible-content'),
@@ -67,6 +73,23 @@ class SettingsManager {
         this.elements.refreshDevicesBtn.addEventListener('click', () => {
             this.enumerateDevices();
         });
+
+        // Toggle model-specific settings based on model type selection
+        this.elements.modelTypeSelect.addEventListener('change', () => {
+            this.toggleModelSettings();
+        });
+    }
+
+    toggleModelSettings() {
+        const modelType = this.elements.modelTypeSelect.value;
+        
+        if (modelType === 'gemini') {
+            this.elements.geminiSettingsGroup.style.display = 'block';
+            this.elements.openaiSettingsGroup.style.display = 'none';
+        } else if (modelType === 'openai') {
+            this.elements.geminiSettingsGroup.style.display = 'none';
+            this.elements.openaiSettingsGroup.style.display = 'block';
+        }
     }
 
     async enumerateDevices() {
@@ -113,8 +136,20 @@ class SettingsManager {
     }
 
     loadSettings() {
-        // Load values from localStorage - only keep the ones we need
-        this.elements.apiKeyInput.value = localStorage.getItem('apiKey') || '';
+        // Load model type settings
+        const modelType = localStorage.getItem('modelType') || 'gemini';
+        this.elements.modelTypeSelect.value = modelType;
+        
+        // Load model-specific settings
+        this.elements.geminiApiKeyInput.value = localStorage.getItem('geminiApiKey') || localStorage.getItem('apiKey') || ''; // Support legacy key
+        this.elements.geminiModelNameSelect.value = localStorage.getItem('geminiModelName') || 'models/gemini-2.0-flash-exp';
+        this.elements.openaiApiKeyInput.value = localStorage.getItem('openaiApiKey') || '';
+        this.elements.openaiModelNameSelect.value = localStorage.getItem('openaiModelName') || 'gpt-4o';
+        
+        // Show/hide appropriate model settings
+        this.toggleModelSettings();
+        
+        // Load other settings
         this.elements.deepgramApiKeyInput.value = localStorage.getItem('deepgramApiKey') || '';
         
         // Default enhanced system instructions if none are set
@@ -135,13 +170,29 @@ Remember to be friendly, helpful, and tailor your responses to the user's needs.
     }
 
     saveSettings() {
-        localStorage.setItem('apiKey', this.elements.apiKeyInput.value);
+        console.log('Saving settings with model type:', this.elements.modelTypeSelect.value);
+        
+        // Save model type settings
+        localStorage.setItem('modelType', this.elements.modelTypeSelect.value);
+        
+        // Save model-specific settings
+        localStorage.setItem('geminiApiKey', this.elements.geminiApiKeyInput.value);
+        localStorage.setItem('geminiModelName', this.elements.geminiModelNameSelect.value);
+        localStorage.setItem('openaiApiKey', this.elements.openaiApiKeyInput.value);
+        localStorage.setItem('openaiModelName', this.elements.openaiModelNameSelect.value);
+        
+        console.log('OpenAI API key set, length:', this.elements.openaiApiKeyInput.value.length);
+        console.log('OpenAI model name set to:', this.elements.openaiModelNameSelect.value);
+        
+        // Save other settings
         localStorage.setItem('deepgramApiKey', this.elements.deepgramApiKeyInput.value);
         localStorage.setItem('systemInstructions', this.elements.systemInstructionsTextarea.value);
         
         // Save selected device IDs
         localStorage.setItem('selectedAudioDeviceId', this.elements.audioInputSelect.value);
         localStorage.setItem('selectedVideoDeviceId', this.elements.videoInputSelect.value);
+        
+        console.log('Settings saved, reloading app...');
     }
 
     toggleCollapsible(toggle, content) {

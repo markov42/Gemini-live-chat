@@ -464,68 +464,150 @@ return dfs(root, 1, 1); // This should be inside the sumEvenGrandparent function
         return issues.length === 0;
     }
 
+    /**
+     * Adds a user message to the chat
+     * @param {string} text - The user's message text
+     */
     addUserMessage(text) {
         const messageDiv = document.createElement('div');
         messageDiv.className = 'chat-message user-message';
-        messageDiv.textContent = text;
+        
+        // Create a content container for the user message too
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        messageContent.textContent = text; // User messages are plain text
+        
+        messageDiv.appendChild(messageContent);
         this.chatContainer.appendChild(messageDiv);
         this.lastUserMessageType = 'text';
         this.scrollToBottom();
     }
 
+    /**
+     * Adds a user audio message to the chat
+     */
     addUserAudioMessage() {
         const messageDiv = document.createElement('div');
         messageDiv.className = 'chat-message user-message';
-        messageDiv.textContent = 'User sent audio';
+        
+        // Create a content container for the user message
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        messageContent.textContent = 'User sent audio';
+        
+        messageDiv.appendChild(messageContent);
         this.chatContainer.appendChild(messageDiv);
         this.lastUserMessageType = 'audio';
         this.scrollToBottom();
     }
 
+    /**
+     * Creates a new model message in the chat
+     */
     startModelMessage() {
-        // If there's already a streaming message, finalize it first
+        // First, finalize any existing streaming message
         if (this.currentStreamingMessage) {
             this.finalizeStreamingMessage();
         }
-
-        // If no user message was shown yet, show audio message
-        if (!this.lastUserMessageType) {
-            this.addUserAudioMessage();
-        }
-
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'chat-message model-message streaming';
-        this.chatContainer.appendChild(messageDiv);
-        this.currentStreamingMessage = messageDiv;
-        this.currentTranscript = ''; // Reset transcript when starting new message
+        
+        // Create a new message element
+        const messageElement = document.createElement('div');
+        messageElement.className = 'chat-message model-message streaming';
+        
+        // Add a container for the message content to properly apply HTML
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        messageElement.appendChild(messageContent);
+        
+        // Add the message to the chat container
+        this.chatContainer.appendChild(messageElement);
+        
+        // Set as current streaming message
+        this.currentStreamingMessage = messageElement;
+        
+        // Reset the current streamed content
+        this.currentStreamedContent = '';
+        
+        // Scroll to the bottom
         this.scrollToBottom();
+        
+        return messageElement;
     }
 
+    /**
+     * Finalizes the currently streaming message
+     */
+    finalizeStreamingMessage() {
+        if (this.currentStreamingMessage) {
+            // Remove the streaming class
+            this.currentStreamingMessage.classList.remove('streaming');
+            
+            // Apply any final formatting
+            const messageContent = this.currentStreamingMessage.querySelector('.message-content');
+            if (messageContent && this.currentStreamedContent) {
+                const formattedContent = this.formatMarkdown(this.currentStreamedContent);
+                messageContent.innerHTML = formattedContent;
+                
+                // Make sure code blocks are properly highlighted and have copy buttons
+                this.applySyntaxHighlighting();
+                this.checkCodeBlocksScrollable();
+                this.setupCopyButtons();
+            }
+            
+            // Reset the current streaming message
+            this.currentStreamingMessage = null;
+            this.currentStreamedContent = '';
+            this.lastUserMessageType = null; // Reset for next turn
+        }
+    }
+
+    /**
+     * Updates the streaming message with new text
+     * @param {string} text - The text fragment to add to the streaming message
+     */
     updateStreamingMessage(text) {
+        // Ensure text is a string (guard against undefined or null)
+        const textFragment = text?.toString() || '';
+        
+        // Don't process empty fragments
+        if (!textFragment) return;
+        
         if (!this.currentStreamingMessage) {
             this.startModelMessage();
+            
+            // If we don't have a user message showing, add one based on the last known type
+            if (!this.lastUserMessageType) {
+                this.addUserAudioMessage();
+            }
         }
         
-        // Accumulate text fragments into complete response
-        // Only update if text contains new content
-        if (text && !this.currentTranscript.includes(text)) {
-            this.currentTranscript += text;
-        }
+        // Get the message content container
+        const messageContent = this.currentStreamingMessage.querySelector('.message-content');
         
-        try {
-            // Format the complete transcript 
-            this.currentStreamingMessage.innerHTML = this.formatMarkdown(this.currentTranscript);
-            
-            // Add event listeners to copy buttons
-            this.setupCopyButtons();
-            
-            // Apply syntax highlighting 
-            this.applySyntaxHighlighting();
-        } catch (error) {
-            console.error("Error formatting markdown:", error);
-            // Fallback to plain text
-            this.currentStreamingMessage.textContent = this.currentTranscript;
-        }
+        // Check if we're using OpenAI by looking for a modelType indicator
+        const modelIndicator = document.getElementById('modelIndicator');
+        const isOpenAI = modelIndicator && modelIndicator.textContent.includes('OpenAI');
+        
+        // Add text to the accumulated content
+        this.currentStreamedContent += textFragment;
+        
+        // Format the accumulated content
+        const formattedContent = this.formatMarkdown(this.currentStreamedContent);
+        
+        // Update the message content - replace the entire content instead of appending
+        // This prevents duplication issues
+        messageContent.innerHTML = formattedContent;
+        
+        // Make sure code blocks are properly highlighted
+        this.applySyntaxHighlighting();
+        
+        // Add scrolling indicator to scrollable code blocks
+        this.checkCodeBlocksScrollable();
+        
+        // Set up copy buttons for code blocks
+        this.setupCopyButtons();
+        
+        // Scroll to the bottom
         this.scrollToBottom();
     }
 
@@ -599,20 +681,6 @@ return dfs(root, 1, 1); // This should be inside the sumEvenGrandparent function
                 }
             }
         });
-    }
-
-    finalizeStreamingMessage() {
-        if (this.currentStreamingMessage) {
-            this.currentStreamingMessage.classList.remove('streaming');
-            
-            // Final setup of copy buttons and syntax highlighting
-            this.setupCopyButtons();
-            this.applySyntaxHighlighting();
-            
-            this.currentStreamingMessage = null;
-            this.lastUserMessageType = null;
-            this.currentTranscript = ''; // Reset transcript when finalizing
-        }
     }
 
     scrollToBottom() {

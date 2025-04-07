@@ -1,9 +1,9 @@
 /**
  * Core application class that orchestrates the interaction between various components
- * of the Gemini 2 Live API. Manages audio streaming, WebSocket communication, audio transcription,
+ * of the AI Live API. Manages audio streaming, model communication, audio transcription,
  * and coordinates the overall application functionality.
  */
-import { GeminiWebsocketClient } from '../ws/client.js';
+import { ModelFactory } from '../models/model-factory.js';
 
 import { AudioRecorder } from '../audio/recorder.js';
 import { AudioStreamer } from '../audio/streamer.js';
@@ -16,16 +16,26 @@ import { ScreenManager } from '../screen/screen.js';
 export class GeminiAgent{
     constructor({
         name = 'GeminiAgent',
-        url,
         config,
+        modelType = 'gemini',
+        geminiApiKey = null,
+        openaiApiKey = null,
         deepgramApiKey = null,
         transcribeModelsSpeech = true,
         transcribeUsersSpeech = false,
         modelSampleRate = 24000,
         toolManager = null
     } = {}) {
-        if (!url) throw new Error('WebSocket URL is required');
         if (!config) throw new Error('Config is required');
+        
+        // Check for necessary API keys based on model type
+        if (modelType === 'gemini' && !geminiApiKey) {
+            throw new Error('Gemini API key is required when using the Gemini model');
+        }
+        
+        if (modelType === 'openai' && !openaiApiKey) {
+            throw new Error('OpenAI API key is required when using the OpenAI model');
+        }
 
         this.initialized = false;
         this.connected = false;
@@ -78,21 +88,32 @@ export class GeminiAgent{
         this.config = config;
 
         this.name = name;
-        this.url = url;
-        this.client = null;
+        this.modelType = modelType;
+        
+        // Create the appropriate model instance using the factory
+        this.model = ModelFactory.createModel(modelType, config, {
+            geminiApiKey,
+            openaiApiKey
+        });
+        
+        // Set up event listeners
+        this._eventListeners = new Map();
     }
 
     setupEventListeners() {
+        console.log(`Setting up event listeners for ${this.modelType} model`);
+        
         // Handle incoming text from the model
-        this.client.on('text', (text) => {
+        this.model.on('text', (text) => {
             // Directly pass through text fragments as they arrive
             if (text && text.trim()) {
+                // For OpenAI, the text is emitted as complete fragments that shouldn't be modified
                 this.emit('text', text);
             }
         });
     
         // Handle incoming audio data from the model
-        this.client.on('audio', async (data) => {
+        this.model.on('audio', async (data) => {
             try {
                 if (!this.audioStreamer.isInitialized) {
                     this.audioStreamer.initialize();
@@ -116,12 +137,12 @@ export class GeminiAgent{
                 }
 
             } catch (error) {
-                throw new Error('Audio processing error:' + error);
+                console.error('Audio processing error:', error);
             }
         });
 
         // Handle model interruptions by stopping audio playback
-        this.client.on('interrupted', () => {
+        this.model.on('interrupted', () => {
             this.audioStreamer.stop();
             this.audioStreamer.isInitialized = false;
             this.emit('interrupted');
@@ -134,7 +155,7 @@ export class GeminiAgent{
         });
 
         // Add an event handler when the model finishes speaking if needed
-        this.client.on('turn_complete', () => {
+        this.model.on('turn_complete', () => {
             console.info('Model finished speaking');
             this.emit('turn_complete');
             
@@ -145,41 +166,114 @@ export class GeminiAgent{
             }
         });
 
-        this.client.on('tool_call', async (toolCall) => {
+        this.model.on('tool_call', async (toolCall) => {
+            console.log(`Received tool call from ${this.modelType} model`, toolCall);
             await this.handleToolCall(toolCall);
         });
     }
         
     // TODO: Handle multiple function calls
     async handleToolCall(toolCall) {
+        console.log(`Handling tool call in ${this.modelType} agent`);
         const functionCall = toolCall.functionCalls[0];
         const response = await this.toolManager.handleToolCall(functionCall);
-        await this.client.sendToolResponse(response);
+        await this.model.sendToolResponse(response);
     }
 
     /**
      * Connects to the Gemini API using the GeminiWebsocketClient.connect() method.
      */
     async connect() {
-        this.client = new GeminiWebsocketClient(this.name, this.url, this.config);
-        await this.client.connect();
-        this.setupEventListeners();
-        this.connected = true;
+        console.log(`Connecting to ${this.modelType} model...`);
+        try {
+            await this.model.connect();
+            this.setupEventListeners();
+            this.connected = true;
+            console.log(`Successfully connected to ${this.modelType} model`);
+        } catch (error) {
+            console.error(`Error connecting to ${this.modelType} model:`, error);
+            throw error;
+        }
     }
 
     /**
-     * Sends a text message to the Gemini API.
+     * Sends a text message to the model.
      * @param {string} text - The text message to send.
      */
     async sendText(text) {
-        await this.client.sendText(text);
+        console.log(`Sending text to ${this.modelType} model:`, text);
+        await this.model.sendText(text);
         this.emit('text_sent', text);
+    }
+
+    /**
+     * Initialize audio components for capturing and streaming
+     */
+    async initializeAudio() {
+        try {
+            // Skip audio initialization for OpenAI model
+            if (this.modelType === 'openai') {
+                console.log('Skipping audio initialization for OpenAI model');
+                return Promise.resolve();
+            }
+
+            console.log('Initializing audio components...');
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Set up audio recorder for user's speech
+            this.audioRecorder = new AudioRecorder({
+                onAudioDataAvailable: this.handleCapturedAudio.bind(this),
+                sendToUserTranscriber: this.transcribeUsersSpeech
+            });
+            
+            // Create audio streamer for model's speech
+            this.audioStreamer = new AudioStreamer(this.audioContext, this.modelSampleRate);
+            
+            // Create transcriber for user speech if requested
+            if (this.transcribeUsersSpeech) {
+                this.userTranscriber = new DeepgramTranscriber({
+                    apiKey: this.deepgramApiKey,
+                    onTranscript: (text) => {
+                        this.emit('user_transcription', text);
+                    }
+                });
+            }
+            
+            // Create transcriber for model speech if requested
+            if (this.transcribeModelsSpeech) {
+                this.modelTranscriber = new DeepgramTranscriber({
+                    apiKey: this.deepgramApiKey,
+                    onTranscript: (text) => {
+                        this.emit('transcription', text);
+                    }
+                });
+            }
+            
+            console.log("Audio components initialized");
+        } catch (error) {
+            console.error("Error initializing audio:", error);
+            throw error;
+        }
     }
 
     /**
      * Starts camera capture and sends images at regular intervals
      */
     async startCameraCapture() {
+        // For OpenAI model, camera input is only stored locally, not streamed continuously
+        if (this.modelType === 'openai') {
+            console.warn('Continuous camera streaming is not used with OpenAI model');
+            
+            try {
+                await this.cameraManager.initialize();
+                console.info('Camera initialized for OpenAI (single captures only)');
+            } catch (error) {
+                console.error('Failed to initialize camera for OpenAI:', error);
+                throw error;
+            }
+            return;
+        }
+        
         if (!this.connected) {
             throw new Error('Must be connected to start camera capture');
         }
@@ -212,7 +306,7 @@ export class GeminiAgent{
             // Set up interval to capture and send images
             this.cameraInterval = setInterval(async () => {
                 const imageBase64 = await this.cameraManager.capture();
-                this.client.sendImage(imageBase64);                
+                this.model.sendImage(imageBase64);                
             }, this.captureInterval);
             
             console.info('Camera capture started');
@@ -244,6 +338,12 @@ export class GeminiAgent{
      *                                       If not provided, uses the value from settings.
      */
     async startScreenShare(showSelectionDialog) {
+        // For OpenAI model, screen sharing is only stored locally, not streamed continuously
+        if (this.modelType === 'openai') {
+            console.warn('Continuous screen sharing is not used with OpenAI model');
+            return;
+        }
+        
         if (!this.connected) {
             throw new Error('Websocket must be connected to start screen sharing');
         }
@@ -261,7 +361,7 @@ export class GeminiAgent{
             // Set up interval to capture and send screenshots
             this.screenInterval = setInterval(async () => {
                 const imageBase64 = await this.screenManager.capture();
-                this.client.sendImage(imageBase64);
+                this.model.sendImage(imageBase64);
             }, this.captureInterval);
             
             console.info('Screen sharing started');
@@ -330,9 +430,8 @@ export class GeminiAgent{
             }
 
             // Cleanup WebSocket
-            if (this.client) {
-                this.client.disconnect();
-                this.client = null;
+            if (this.model) {
+                await this.model.disconnect();
             }
             
             this.initialized = false;
@@ -345,146 +444,20 @@ export class GeminiAgent{
     }
 
     /**
-     * Initializes the model's speech transcriber with Deepgram
-     */
-    async initializeModelSpeechTranscriber() {
-        if (!this.modelTranscriber) {
-            console.warn('Either no Deepgram API key provided or model speech transcription disabled');
-            return;
-        }
-
-        console.info('Initializing Deepgram model speech transcriber...');
-
-        // Just log transcription to console for now
-        this.modelTranscriber.on('transcription', (transcript) => {
-            this.emit('transcription', transcript);
-            console.debug('Model speech transcription:', transcript);
-        });
-
-        // Don't auto-connect or set up keep-alive interval
-        // Will connect only when needed
-    }
-
-    /**
-     * Initializes the user's speech transcriber with Deepgram
-     */
-    async initializeUserSpeechTranscriber() {
-        if (!this.userTranscriber) {
-            console.warn('Either no Deepgram API key provided or user speech transcription disabled');
-            return;
-        }
-
-        console.info('Initializing Deepgram user speech transcriber...');
-
-        // Handle user transcription events
-        this.userTranscriber.on('transcription', (transcript) => {
-            this.emit('user_transcription', transcript);
-            console.debug('User speech transcription:', transcript);
-        });
-
-        // Don't auto-connect or set up keep-alive interval
-        // Will connect only when the microphone is turned on
-    }
-
-    /**
-     * Initiates audio recording from the microphone.
-     * Streams audio data to the model in real-time, handling interruptions
-     */
-    async initialize() {
-        try {            
-            // Initialize audio components
-            this.audioContext = new AudioContext();
-            this.audioStreamer = new AudioStreamer(this.audioContext);
-            this.audioStreamer.initialize();
-            this.audioRecorder = new AudioRecorder();
-            
-            // Initialize transcriber objects if API key is provided, but don't connect yet
-            if (this.deepgramApiKey) {
-                if (this.transcribeModelsSpeech) {
-                    this.modelTranscriber = new DeepgramTranscriber(this.deepgramApiKey, this.modelSampleRate);
-                    await this.initializeModelSpeechTranscriber();
-                    // Only connect when we actually need it (e.g., when receiving audio)
-                }
-                if (this.transcribeUsersSpeech) {
-                    this.userTranscriber = new DeepgramTranscriber(this.deepgramApiKey, 16000);
-                    await this.initializeUserSpeechTranscriber();
-                    // Will connect only when mic is enabled
-                }
-            } else {
-                console.warn('No Deepgram API key provided, transcription disabled');
-            }
-            
-            this.initialized = true;
-            console.info(`${this.client.name} initialized successfully`);
-            this.client.sendText('.');  // Trigger the model to start speaking first
-        } catch (error) {
-            console.error('Initialization error:', error);
-            throw new Error('Error during the initialization of the client: ' + error.message);
-        }
-    }
-
-    async startRecording() {
-        // Ensure user transcriber is connected before starting recording
-        if (this.userTranscriber && this.transcribeUsersSpeech) {
-            try {
-                if (!this.userTranscriber.isConnected) {
-                    console.log("Connecting user transcriber before starting recording...");
-                    await this.userTranscriber.connect();
-                    
-                    // Small delay to ensure WebSocket is fully established
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                }
-            } catch (e) {
-                console.warn("Failed to connect user transcriber before recording:", e);
-                // Continue anyway - we'll try to send audio when possible
-            }
-        }
-        
-        // Start recording with callback to send audio data to websocket and transcriber
-        await this.audioRecorder.start(async (audioData) => {
-            try {
-                console.log("Audio data captured, sending to server...", audioData.length);
-                this.client.sendAudio(audioData);
-                
-                // Send to user transcriber if connected and enabled
-                if (this.userTranscriber && this.transcribeUsersSpeech) {
-                    // Use a non-blocking approach to send audio to transcriber
-                    try {
-                        if (this.userTranscriber.isConnected && 
-                            this.userTranscriber.ws && 
-                            this.userTranscriber.ws.readyState === WebSocket.OPEN) {
-                            
-                            this.userTranscriber.sendAudio(new Uint8Array(audioData));
-                        } else if (!this.userTranscriber.isConnected && this.reconnectTranscriberTimeout === undefined) {
-                            // Limit reconnection attempts to avoid flooding
-                            this.reconnectTranscriberTimeout = setTimeout(async () => {
-                                console.log("User transcriber not connected, attempting to reconnect...");
-                                try {
-                                    await this.userTranscriber.connect();
-                                } catch (e) {
-                                    console.error("Failed to reconnect user transcriber:", e);
-                                }
-                                this.reconnectTranscriberTimeout = undefined;
-                            }, 2000);
-                        }
-                    } catch (e) {
-                        // Just log and continue - don't interrupt the main audio flow
-                        console.warn("Error sending audio to transcriber:", e);
-                    }
-                }
-            } catch (error) {
-                console.error('Error sending audio data:', error);
-                this.audioRecorder.stop();
-            }
-        });
-        console.log("Audio recording started successfully");
-    }
-
-    /**
-     * Toggles the microphone state between active and suspended
+     * Toggles the microphone on/off
      */
     async toggleMic() {
+        // For OpenAI model, microphone input is not supported
+        if (this.modelType === 'openai') {
+            console.warn('Microphone input is not supported with OpenAI model');
+            return;
+        }
+        
         try {
+            if (!this.initialized) {
+                await this.initialize();
+            }
+            
             // Ensure we're connected before toggling
             if (!this.connected) {
                 console.info("Not connected. Attempting to connect before toggle mic...");
@@ -531,17 +504,17 @@ export class GeminiAgent{
             await this.audioRecorder.toggleMic();
             
             // If we just resumed the mic, make sure the WebSocket is open
-            if (!this.audioRecorder.isSuspended && (!this.client.ws || this.client.ws.readyState !== WebSocket.OPEN)) {
+            if (!this.audioRecorder.isSuspended && (!this.model.ws || this.model.ws.readyState !== WebSocket.OPEN)) {
                 console.info("WebSocket not in OPEN state after resuming mic. Attempting to reconnect...");
-                await this.client.connect();
+                await this.model.connect();
             }
         } catch (error) {
             console.error("Error in toggleMic:", error);
             // Try to recover the WebSocket connection if it failed
-            if (this.client && (!this.client.ws || this.client.ws.readyState !== WebSocket.OPEN)) {
+            if (this.model && (!this.model.ws || this.model.ws.readyState !== WebSocket.OPEN)) {
                 try {
                     console.info("Attempting to reconnect WebSocket after error...");
-                    await this.client.connect();
+                    await this.model.connect();
                 } catch (reconnectError) {
                     console.error("Failed to reconnect WebSocket:", reconnectError);
                 }
@@ -567,6 +540,34 @@ export class GeminiAgent{
         }
         for (const callback of this._eventListeners.get(eventName)) {
             callback(data);
+        }
+    }
+
+    /**
+     * Initializes the agent based on the selected model type
+     */
+    async initialize() {
+        try {
+            console.log(`Initializing agent with ${this.modelType} model...`);
+            
+            if (this.modelType === 'openai') {
+                // For OpenAI, we only need basic initialization without audio components
+                this.initialized = true;
+                console.info('OpenAI agent initialized successfully');
+                return;
+            }
+            
+            // For Gemini, initialize audio components for real-time streaming
+            await this.initializeAudio();
+            
+            this.initialized = true;
+            console.info(`${this.modelType} agent initialized successfully`);
+            
+            // Optional: trigger the model to start speaking first
+            await this.model.sendText('.');
+        } catch (error) {
+            console.error('Initialization error:', error);
+            throw new Error('Error during the initialization of the agent: ' + error.message);
         }
     }
 }

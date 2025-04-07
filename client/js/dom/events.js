@@ -16,15 +16,45 @@ const ensureAgentReady = async (agent) => {
 };
 
 /**
+ * Checks if the current model is OpenAI
+ */
+const isOpenAIModel = () => {
+    const modelType = localStorage.getItem('modelType') || 'gemini';
+    return modelType === 'openai';
+};
+
+/**
  * Sets up event listeners for the application's UI elements
  */
 export function setupEventListeners(agent) {
     connectAgentOnStartup(agent);
-    setupMediaControls(agent);
-    setupScreenSharing(agent);
+    
+    // Only set up media controls if not using OpenAI
+    if (!isOpenAIModel()) {
+        setupMediaControls(agent);
+        setupScreenSharing(agent);
+    } else {
+        disableMediaFeatures();
+    }
+    
     setupMessageHandling(agent);
     setupSettingsButton();
     setupKeyboardShortcuts(agent);
+}
+
+/**
+ * Disables media features when using OpenAI
+ */
+function disableMediaFeatures() {
+    // Disable media buttons with visual indication
+    elements.micBtn.classList.add('disabled');
+    elements.cameraBtn.classList.add('disabled');
+    elements.screenBtn.classList.add('disabled');
+    
+    // Add tooltips to explain why features are disabled
+    elements.micBtn.title = 'Microphone not available with OpenAI';
+    elements.cameraBtn.title = 'Camera not available with OpenAI';
+    elements.screenBtn.title = 'Screen sharing not available with OpenAI';
 }
 
 function connectAgentOnStartup(agent) {
